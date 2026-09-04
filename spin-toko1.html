@@ -15,17 +15,21 @@ body{font-family:Roboto,Arial,Helvetica,sans-serif;color:#fff;
 
 #stage{position:absolute;top:0;left:0;width:1920px;height:1080px;
   transform-origin:top left;overflow:hidden;background:var(--bg1)}
-#bg{position:absolute;top:-10%;left:-10%;width:120%;height:120%}
-#vig{position:absolute;top:0;left:0;width:100%;height:100%;
+#bg{position:absolute;top:-10%;left:-10%;width:120%;height:120%;pointer-events:none}
+#vig{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;
   background:radial-gradient(76% 76% at 50% 46%,transparent 42%,rgba(0,3,12,.72) 100%)}
 
+/* opacity:0 hanya menyembunyikan secara visual — elemennya TETAP menangkap
+   klik. Layar "sedang memutar" karena itu membentang tak terlihat di atas
+   layar diam, dan setiap klik mendarat di situ, bukan di tombol PUTAR.
+   pointer-events:none yang membuat lapisan tak aktif benar-benar tembus. */
 .scene{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;
-  transition:opacity .4s ease;z-index:3}
-.scene.on{opacity:1}
+  pointer-events:none;transition:opacity .4s ease;z-index:3}
+.scene.on{opacity:1;pointer-events:auto}
 
-#logo{position:absolute;top:54px;left:90px;z-index:6;font-weight:900;font-size:26px;
+#logo{position:absolute;top:54px;left:90px;z-index:6;pointer-events:none;font-weight:900;font-size:26px;
   letter-spacing:.26em;max-width:900px;overflow:hidden;white-space:nowrap}
-#logoImg{position:absolute;top:48px;left:90px;z-index:6;height:48px;width:auto;display:none}
+#logoImg{position:absolute;top:48px;left:90px;z-index:6;pointer-events:none;height:48px;width:auto;display:none}
 /* Layar demo: video KV yang berputar sendiri saat layar lama tidak
    disentuh, supaya TV tidak terlihat mati dari kejauhan. Menutupi seluruh
    panggung, dan hilang begitu ada tombol ditekan. */
@@ -35,7 +39,7 @@ body{font-family:Roboto,Arial,Helvetica,sans-serif;color:#fff;
 
 /* Petunjuk sekali pakai — hilang sendiri begitu daftar hadiah diubah,
    supaya tidak mengganggu tampilan di toko. */
-#hint{position:absolute;left:90px;bottom:44px;z-index:7;font-size:19px;
+#hint{position:absolute;left:90px;bottom:44px;z-index:7;pointer-events:none;font-size:19px;
   color:rgba(255,255,255,.42);display:none}
 #hint b{color:var(--ac1)}
 
@@ -364,7 +368,7 @@ var KUNCI = 'spinwheel-toko1';
    Ini menutup masalah yang berulang: pengaturan tersimpan selalu menang
    atas berkas, jadi setelah saya kirim perbaikan, nama toko di TV tidak
    ikut berubah dan orang mengira berkasnya yang salah. */
-var VERSI = '2026-09-04-a';
+var VERSI = '2026-09-04-b';
 
 /* Logo merah, dipakai di tengah kalimat judul lewat token [POLYTRON] */
 var LOGO_MERAH = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOQAAAAfCAYAAAD3AmFXAAAPE0lEQVR4nO2deZAdRR3HP5vDbA7cJbOBQDpCSAejIXKFw4iRS7kiKqiIFxZSHpSWWlhoWeofllUeZXmhJRYqigIiSEDBSAiEICIkoAkkkGMkJJkkQNLh2LDLbo71j2+/zdu30zPz3r632YDfqqlU3sz0r6f79/v17+reJoYonLFjAQO8ERhbcbsLWAtsjJL4hUHu2pCBM3YScAAwsgHNdwCboyTuLKM3GjgUGFNDe9ujJN5Ur85Vwhl7CDAN8cx4oA0YDriya02UxHENbR8NvAt4fQ1dewbYDrxYhH6TM/YA4HzgaOB1NRDc5omuA1ZHSZzU0AYAztg234+ZSBDHAwcDzRWP7gSeRR+6ElgFrCg64Z6xrgRagGEVt7uBjcA1URK/ktNOC/B+YDphobgbeChKYpfT1ljgOGAuMCrlkZ3oO2+JkvhFZ+wpwAeBiSnfUA90AQuAe6IkTpyxE4HTMvqXh5eRULQDG4DVwKooibfV2kEvhEcDxyJ+OQiIkAI/AAnkDk9zB7AJ8ekyYEmUxBsL0GgDPgZ8ltoU0fPo2zvL6K8B7o+SeH3lwyP8R7wPeI//f7UoCeTTwApn7FLgkSiJNxRtwBk7HngzMBt4OxLIwwq+/hSa3CXO2PuAZQVWzSnA5cAEoKniXjcQA9cBmQIJtAIXIu05PINWJ3BvTlvTgI8CH6e/AgLYjQRkoTO2Czje0z40p92BoBVZIgkaq9OADw+gvT2IOdfjlagz9kE0Z1uLNuIXkdnAyf56C8XGocfTXwYsdcYuRoK5JeOdA4Ej0PzUgkkV9DuAJ4HjnLF3A0vLv30E0iRjqU0YQaZBG3AUcCaS/pudsbdFSbwi72Vvdp2KlMI7fFvV4Ah/nQycCNzgjL03SuLNAXrjkJCMpb8wgqyEQwP3KrELad8uwtpzDrDcGbsmZD04Yw9Eiuhs0oURT6Pd02wCRtOYlbEck9hrpg2nNguqHMMQvx3lr7nAIuAWZ+w9aStGJZyxkxGfXArM8u0VRRMwDjjFX7MQr94VJfGaaj6kRjQhvpvlr5nA9c7Yu0u8Ue8JbUba6qvAV52xR2Y97IXx/f75C6leGMtxIHAO8C3gg87YCQNoqxC8ibwQKaGewGOtaGWZndHULLTKviFwv8fTWNhIP2wfoBnN2VeADzljW0MPOmNHOWOnAh8BfoiEshphTMPbgW8Alztj7QDbqgVnAFcA73HGjoHGadixaOA+6YxNNT2dsaPQRHwNact6YQrwTU97IAJeFPOAxcgUCmEWcIZXQH3gmfBMpLFDeNnTmFd7N4c0jgQ+AJyX8cxUtCp+B5nP9eLdCchV+PJgKPEUzEDffQI03uS5FDjWByx64f9/ob8aMQitSCgvdsaaBrTfCx+UWAg8nPFYMzKp56bcOwOtni0Z7z+MVseaAyD7AWYgy6bfqueMPQgFHr/UINrjgXej1XJfYA5wmTN2XKMFcjxwLvLxgN6VcTrwXRRBLeKrVYuSj/V54ORKhdAALAbuRBG1EI4Ezi63GLxGPg8xY2gcnvdtLy77rQdFDXcPoM9FsBpFRgcDo4DDgbem3DsHuATNaVGsRAG/LMulhCbEi2c5Yy/1PFoNngMeqbg6M9/oizGABU4oGsi5ir5RwuHAZKS1shzrYSiUfyjwuP9tMvAZ/28elqHV4REUzcXTmgWcjpg8K9AwBWm+9cDSAvRqQpTE7T7CexSyCtJQ8q8vAr7vf5uLviVrdZwH3BclcXsZvVecsXeiSZ9AOCB3KRqDEOajeWlPudcJ/AtFWYtgHXAH/aPJpSDZ8cDbMvrThBT48SiaDIAz9iTgrIz3SmhH33Iv4huH+O8gFMGfA5xEOGhW4ulLgL+hzEFRLAZ+WvFbC0qFTfS0z/B9SUMTCqCdXlQgH42S+LbyH7x2fwKlD+agoEoappbuec0zlWxfAaTVbgf+ijTd0yWG9DnER4H7gU8jUzCkEEYgwX3QGbsySuKOHLoDwVrE4HOQtkvDIcC5zti/oUTxBWhVCFkqKxFz9BOKKInXOWPnIQYLvX8e2Yy8BI1zWsqhq5pUBPAS8J9KPoFeXnkQWAF8ETFpGkZTZk15zEb+Vdaq9QwSxOuBJ6MkXldGuxkp9X8ja+1jhIWyGSnV2T7ymaao0rA5SuIH0m74GMEKNMafyqDdRhUrZD/4yVrgE8aHERbIVvYO5sEoNXFIRtPtwAPAT4DlURJ3VdDtRIrgCWfsLmS2nezppMGglWkSxbV91YiSeIcz9lHgTyhylsZAo5G2/gTK7R1DWJl0ATehPNWOAM3tWX1yxublUZ8HnsnJww0Ynle2OmM7UHT0nMCjw1FaAugV5JloDkN4AaVOfhkl8f0ptF8B1jljn0GJ+RbgvaRbVqW0xPlIWRUVyCB8TvwBZ+wIZA2Fou2jgUn18CEfo/jyfjgKNYewGyXlr46SeEmlMFYiSuLbgd8gX2dPxqMWmbcNhdfMN6ExCfl3B6II9GWoqiQNu30bt1dTYLEf4GWUvimKGWiFD60qIPP0T2nCWA6vyFeglEmMCkDSMBKlqUILTK2Igb/kPDOqHgI5inCVSiXaUEAnhJLZk9fxctyBTJKXMp45jGwtW08kwDXIJE3LTY5AJtsM0oMUPf7da3xbryaMJGzJgJTqzrL/Tyc7N92FShMXFSHuhfJx5AqF+GUYygdP9OZuvbANmc1ZaKqHQE5DzngIe9jLmC1kB3M2IVOhMPwgL0NBhRAOJuy31BXejLyR6iNtJXSiANSNeSbpEEMTGWk0X/c7HXhnRhtdQHmFVZ5AbgTWRUn8YtFO+jjCIrIVOEiJj8t5pjC86fxc3nM1+5AAztizgM8hOz+Ex4HnvLbJC1snZOfzQohRJPXYwP1W6m+CBOH9yW8jc7raCpAEuDLkNw5hjAWmOWNPTbnXisojLyJbMb6EFFlRrEJKvCpESXyXM3bA/mEjUFQgL3fGnl3x3kRk37eRnXp4BGm9CWQHcwaC7dTBAa8zlqII5sUULwDfgFbGxxrWq8bhMJTOuiTl3nDkB2blg7uRMsr0BSvQQdgX3C9RVCBn0jco0oR8xzwbuwOFozd4WkWStLVgHNUljRsOnyu8FvmKeUoLxFgrgRsa3bcGYQRySbJyqll4HPhNlMS5Zl0ZWqhtS9SQRVEfcjQyO0pXC/nCCPBrtL3lBbSCZVWygHzRWra5TCQcsQQpgkYpgyCiJF4J/B2Z1Hl4EvjLIO06GGpYDfwZlSBWgymEk+1BOGPfwhBT4CU0onSuBwnebcC1eBvfpzDayRaMSShXUy2m0z+hXI5tFHCoG4T5wH3IrA5hOzLVFmQ882pEN6oG+hUwL2V13IJKBEMwwBHO2Cxl3Ac+lnE6+QGbTcjCG1TUWyA7kaa/AeV7niw/AgIlcbP2vEXALGfsjKIEnbHTUCVHv50UZdhE3+jdoMGveA+T/d3r0abupwanV0MC3cid+TlwQ5TEq1KeWcXeksk0jEHlcMdVQXcSKkwImdY9SHlvbHBlVyoGFGVFYepulDfbjnzFe4E/BMqungWWo2qVNDT7e5c5Y7+fV0HiKzkuRsc4ZH3LOrLTIo3GVvTtITxLevna/oRu9h6VAapAaiGco96FiubviZI4VFjyBFKkuzPamQ1scMZuiJJ4dVYH/ebmC1BxSshk3Qn8g30UJCwqkI5002GLv/6NPuKxKImz/MQNqBD3AsK1iRPRMRaJM/YW4LmKVbZkdhyAtm99HNXHhlAqtav2cKNmXzdbCJV9fA1iK5rbUhH/cagoPOTjjUF7INcSqPSKknitM3YlErpQuqQNlbp1OWOvBrZESdzHLfKnRByCcqDfINt/7EQVNYVzm/VEUYG8Ikri3w2UWJTEW52xD6FE/kkZj44HfoC24lzrjO09JMoP7izgC2jC84TmIWQOvlBFV0eiXQeFA0HO2G0oST3owaMhgm1oz+a10FsI8Efkr4UizHOAZc7Y9QGTFVSJMxPVn4bwBrTJ4RTgKmfsgpKF5vfDvhMVlZ+W8w3daNGYV0VheV0xUJO1FiQo+polkCWcg8yLLmfsejRgFk1wkUjvDuBW8kuWKjEGJfWz6mMr0QnMd8Ze+RoWyl74k/F+hs7kyTq+5EPIGno6cMrfUrTy5sUJmlGx/o+BTmdsae6GI6VdJD3yLPA99mFuc9AFMkpi54xdBNyCtsNkDdSYsvsTkMNdTbj6t+i4vWp32jdRfTi9B0V7D0f5xP8D/olSGZMJl0y2oX2h6xBP9IHP5y5EUfTLCM9/KTdeyxGVoEDOfGB+3qaGRqLRJwaEsBFt0l1IcVu9SOldCZ0ohfB74L9V9642NKGV+1WVqB4IvJtwK6odDTH5MBSUm+sj5ml4ClU93VHvPnqUtvz9Yl/XD+8TgYySuCtK4qUo5L2I/IKBarAdTdwPUZDpNW8+7ktESbwcBUmyTmxoQacJXOR9z8o2OoD/oB0w1yMBCp3yVy02o5z5NVESL6tTmzWjiMm6i+p8qcKIkniBM3YkCgiciiovim7lqkTpxPH7gOvy9sf9H4OKf6G5PZKwKzAFHda9hJQCiSiJtztj/4FMyw72HgdSa8XNLhR9vwu4NUrih2psp64YQd/tUWnYRgMrFqIkvtMZuwaZJeejiFlEcV+gE/XxKTSRN0dJnHUywG4UPe0mu9i5WvT4NtPGajfZY9xDYw6s6kSMl6Z4d1NdcfYe31YI3QS2m0VJvNnHDY5B5/Cmze1wVIT/DgIVSz7os9wZ+3WUfz4blVpGKHiUZ/GVTk7fgopFrgf+nnPWbTfKTe4JtN9F/gn3lfTT+K4H2DUC+XBb0NKdRvBBGlzl4vNNP0ITcQE6EGgy8htLzvow3+k9aJD2oIGIUb3oX33taB6tTq8AVnsata7IlehElSVPp9x7CY1h2hjv8b/n7c+rBcsRk7em3GtHf4ul6Klypb9NEao4WkuGvx4l8aM+TziV8K6fjUixZsKX2P3EGTsfWVZnIj+0FSmftDEuFS6sBG4GFhc8dPpF36dVpAvSForHKV5G+fpp9FeSO4FVTdD7B0UM6RO3PCfZX3f4w7DehM7KmYCqdyaiQd2KhGkDKkkLhcvzaLSiP9BSryLjzDykryqaQv+gT4d/b3+v1Nmn8Dx8IprTSj90GxLE1aE/MTFU8D9pD9E+eDKFSAAAAABJRU5ErkJggg==';
