@@ -156,11 +156,17 @@ body{font-family:Roboto,Arial,Helvetica,sans-serif;color:#fff;
 @keyframes masuk{
   from{transform:translate(-50%,-50%) scale(.82);opacity:0}
   to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+/* Gambar hadiah. Tingginya dibatasi agar kartu tidak melar melewati
+   layar saat nama hadiahnya panjang. */
+#pop img#rimg{display:none;max-height:300px;max-width:70%;width:auto;margin:26px auto 4px}
+#pop img#rimg.on{display:block}
+#pop.zonk img#rimg{display:none}
 #pop .lb{font-size:27px;letter-spacing:.16em;font-weight:900;text-transform:uppercase;color:var(--ac3)}
 #pop .nm{font-weight:900;font-style:italic;font-size:112px;line-height:1;letter-spacing:-.035em;
-  margin:30px 0 10px;color:var(--ac1);text-transform:uppercase;word-wrap:break-word}
+  margin:26px 0 10px;color:var(--ac1);text-transform:uppercase;word-wrap:break-word}
 #pop.zonk .card{border-color:var(--ac2)}
 #pop.zonk .nm{color:#fff;font-size:84px}
+#pop.bergambar .nm{font-size:74px;margin-top:14px}
 #pop.zonk .lb{color:var(--ac2)}
 
 
@@ -249,6 +255,7 @@ body{font-family:Roboto,Arial,Helvetica,sans-serif;color:#fff;
 
   <div id="pop"><div class="card">
     <div class="lb" id="rlb"></div>
+    <img id="rimg" alt="">
     <div class="nm" id="rnm"></div>
   </div></div>
 </div>
@@ -368,7 +375,7 @@ var KUNCI = 'spinwheel-toko1';
    Ini menutup masalah yang berulang: pengaturan tersimpan selalu menang
    atas berkas, jadi setelah saya kirim perbaikan, nama toko di TV tidak
    ikut berubah dan orang mengira berkasnya yang salah. */
-var VERSI = '2026-09-04-b';
+var VERSI = '2026-09-04-c';
 
 /* Logo merah, dipakai di tengah kalimat judul lewat token [POLYTRON] */
 var LOGO_MERAH = 'data:image/png;base64,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';
@@ -774,7 +781,9 @@ function adegan(id){
     el(a[i]).className = 'scene' + (a[i]===id ? ' on' : '') + tetap;
   }
 }
-function popTampil(zonk){ el('pop').className = 'on' + (zonk ? ' zonk' : ''); }
+function popTampil(zonk, adaGambar){
+  el('pop').className = 'on' + (zonk ? ' zonk' : '') + (adaGambar ? ' bergambar' : '');
+}
 function popTutup(){ el('pop').className = ''; }
 function popAda(){ return el('pop').className.indexOf('on') >= 0; }
 function keIdle(){ clearTimeout(kembaliT); popTutup(); adegan('idle'); renderPapan(); jadwalDemo(); }
@@ -817,13 +826,37 @@ function putar(){
   }, 5700);
 }
 
+/* Nama hadiah dicocokkan dengan kata kunci, bukan disamakan persis, supaya
+   tetap jalan kalau nanti namanya diubah jadi "Rice Cooker Low Carbo". */
+var GAMBAR = [
+  [/rice\s*cooker|magic\s*com|magicom/i, 'img-ricecooker.png'],
+  [/merch|merchandise/i,                  'img-merch.png'],
+  [/tyeso|gelas|tumbler|mug/i,            'img-tyeso.png']
+];
+function gambarHadiah(nama){
+  for (var i = 0; i < GAMBAR.length; i++) if (GAMBAR[i][0].test(nama)) return GAMBAR[i][1];
+  return '';
+}
+
 function tampilHasil(namaHadiah){
   var zonk = /coba lagi|belum beruntung|zonk/i.test(namaHadiah);
   el('rlb').textContent = zonk ? 'Belum beruntung kali ini' : 'Selamat, Anda mendapatkan';
   el('rnm').textContent = namaHadiah;
 
+  // Gambar hadiah, kalau ada padanannya
+  var berkas = zonk ? '' : gambarHadiah(namaHadiah);
+  var img = el('rimg');
+  if (berkas){
+    img.onerror = function(){ img.className = ''; el('pop').className =
+      el('pop').className.replace(/\s*bergambar\b/,''); };
+    img.src = berkas;
+    img.className = 'on';
+  } else {
+    img.className = ''; img.removeAttribute('src');
+  }
+
   // Roda tetap tampil di belakang popup, jadi jarum penunjuk masih terlihat
-  popTampil(zonk);
+  popTampil(zonk, !!berkas);
   // Lampu terus berkejaran selama hasil ditampilkan — momen paling ramai
   el('roda2').className = 'rot nyala';
   el('roda2').style.transform = 'rotate(' + rot + 'deg)';
