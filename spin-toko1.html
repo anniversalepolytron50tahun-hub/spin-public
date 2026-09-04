@@ -26,6 +26,13 @@ body{font-family:Roboto,Arial,Helvetica,sans-serif;color:#fff;
 #logo{position:absolute;top:54px;left:90px;z-index:6;font-weight:900;font-size:26px;
   letter-spacing:.26em;max-width:900px;overflow:hidden;white-space:nowrap}
 #logoImg{position:absolute;top:48px;left:90px;z-index:6;height:48px;width:auto;display:none}
+/* Layar demo: video KV yang berputar sendiri saat layar lama tidak
+   disentuh, supaya TV tidak terlihat mati dari kejauhan. Menutupi seluruh
+   panggung, dan hilang begitu ada tombol ditekan. */
+#demo{position:absolute;top:0;left:0;width:1920px;height:1080px;z-index:20;
+  object-fit:cover;display:none;background:#000715}
+#demo.on{display:block}
+
 /* Petunjuk sekali pakai — hilang sendiri begitu daftar hadiah diubah,
    supaya tidak mengganggu tampilan di toko. */
 #hint{position:absolute;left:90px;bottom:44px;z-index:7;font-size:19px;
@@ -34,7 +41,7 @@ body{font-family:Roboto,Arial,Helvetica,sans-serif;color:#fff;
 
 /* Layar diam */
 #idle .in{position:absolute;top:0;left:0;width:100%;height:100%}
-#idle .kiri{position:absolute;left:78px;top:50%;width:900px;margin-top:-252px}
+#idle .kiri{position:absolute;left:78px;top:50%;width:900px;margin-top:-286px}
 /* "PASTI UNTUNG" magenta di atas blok kuning miring, persis seperti KV */
 #blok{display:inline-block;background:var(--ac1);padding:22px 54px 26px;
   transform:skewX(-12deg);margin-left:10px}
@@ -71,7 +78,7 @@ body{font-family:Roboto,Arial,Helvetica,sans-serif;color:#fff;
 
 /* Mode ringkas: begitu ada hadiah keluar, blok judul mengecil dan naik
    supaya papan hadiah punya ruang. */
-#idle.ada .kiri{margin-top:-378px}
+#idle.ada .kiri{margin-top:-396px}
 #idle.ada #blok{padding:15px 40px 18px}
 #idle.ada #subjudul{font-size:23px;margin-bottom:13px}
 #idle.ada h1{font-size:54px}
@@ -79,12 +86,12 @@ body{font-family:Roboto,Arial,Helvetica,sans-serif;color:#fff;
 #idle.ada #strip{margin-top:22px;height:18px}
 #idle.ada #strip i{width:9px;height:18px;margin-right:5px}
 #idle.ada #tekan{margin-top:26px;font-size:19px;padding:11px 26px}
-#idle.ada #tempat{margin-top:24px;font-size:36px}
+#idle.ada #tempat{margin-top:34px;font-size:44px}
 
-#tempat{margin-top:34px;font-size:48px;font-weight:900;letter-spacing:.08em;
-  color:rgba(255,255,255,.88);text-transform:uppercase}
+#tempat{margin-top:56px;font-size:62px;font-weight:900;letter-spacing:.06em;
+  color:rgba(255,255,255,.92);text-transform:uppercase;line-height:1.1}
 #tekan{margin-top:46px;display:inline-block;background:var(--ac1);color:#111;
-  font-weight:900;font-style:italic;font-size:22px;padding:13px 30px;text-transform:uppercase;
+  font-weight:900;font-style:italic;font-size:20px;padding:13px 26px;text-transform:uppercase;
   animation:nyala 1.8s infinite}
 @keyframes nyala{0%,100%{opacity:1}50%{opacity:.55}}
 
@@ -121,9 +128,17 @@ body{font-family:Roboto,Arial,Helvetica,sans-serif;color:#fff;
 @keyframes muter{to{transform:rotate(360deg)}}
 .needle{position:absolute;top:-20px;left:50%;margin-left:-26px;width:0;height:0;z-index:5;
   border-left:26px solid transparent;border-right:26px solid transparent;border-top:58px solid var(--ac1)}
-.hub{position:absolute;top:50%;left:50%;margin:-72px 0 0 -72px;width:144px;height:144px;
-  border-radius:50%;background:var(--ac2);z-index:4;text-align:center;line-height:144px;
-  font-weight:900;font-style:italic;font-size:30px;box-shadow:0 0 0 12px var(--bg1)}
+/* Hub adalah SATU-SATUNYA titik yang memutar roda. Sebelumnya klik di
+   mana saja bisa memutar — tersenggol remote sedikit, stok berkurang. */
+.hub{position:absolute;top:50%;left:50%;margin:-86px 0 0 -86px;width:172px;height:172px;
+  border-radius:50%;background:var(--ac2);z-index:9;text-align:center;line-height:172px;
+  font-family:inherit;color:#fff;border:none;padding:0;cursor:pointer;
+  font-weight:900;font-style:italic;font-size:34px;
+  box-shadow:0 0 0 12px var(--bg1);transition:transform .14s,box-shadow .14s}
+.hub:hover,.hub:focus{outline:none;transform:scale(1.09);
+  box-shadow:0 0 0 12px var(--bg1),0 0 0 20px var(--ac1)}
+.hub:active{transform:scale(.97)}
+#hub2{cursor:default}
 
 /* Hasil tampil sebagai popup DI ATAS roda, supaya konsumen masih melihat
    di potongan mana jarum berhenti — itu yang membuat hasilnya terasa jujur. */
@@ -207,21 +222,23 @@ body{font-family:Roboto,Arial,Helvetica,sans-serif;color:#fff;
       </div></div>
       <div id="papan"></div>
       <div id="strip"></div>
-      <div id="tekan">Tekan OK untuk memutar</div>
+      <div id="tekan">Arahkan ke tombol PUTAR, lalu tekan OK</div>
       <div id="tempat"></div>
     </div>
     <div class="wheelbox">
       <div class="needle"></div><div class="rot pelan" id="roda1"></div>
-      <div class="hub" id="hub1">PUTAR</div>
+      <button class="hub" id="hub1" aria-label="Putar roda">PUTAR</button>
     </div>
   </div></div>
 
   <div class="scene" id="play">
     <div class="wheelbox besar">
       <div class="needle"></div><div class="rot" id="roda2"></div>
-      <div class="hub" id="hub2">PUTAR</div>
+      <button class="hub" id="hub2" aria-label="Memutar" tabindex="-1">PUTAR</button>
     </div>
   </div>
+
+  <video id="demo" loop muted playsinline preload="auto" src="demo.mp4"></video>
 
   <div id="hint">Hadiah masih contoh bawaan. Tekan <b>A</b>, atau tombol <b>Kembali 5&times;</b>,
     untuk mengubah daftar hadiah.</div>
@@ -285,6 +302,15 @@ body{font-family:Roboto,Arial,Helvetica,sans-serif;color:#fff;
     Kolom A nama hadiah, kolom B jumlah tampil di roda, kolom C stok asli
     (kolom C boleh dikosongkan — berarti sama dengan kolom B).</div>
 
+  <h3>Layar demo saat menganggur</h3>
+  <div class="two">
+    <label><span>Putar video demo?</span>
+      <select id="cDemo"><option value="1">Ya</option><option value="0">Tidak</option></select></label>
+    <label><span>Setelah berapa detik diam</span><input id="cDemoDetik" type="number" min="15" max="600" step="15"></label>
+  </div>
+  <div class="note">Video diputar tanpa suara supaya musik latar tidak tertimpa.
+    Tekan tombol apa saja untuk kembali ke layar roda.</div>
+
   <h3>Tampilan layar</h3>
   <div class="two">
     <label><span>Layar penuh otomatis?</span>
@@ -328,7 +354,7 @@ body{font-family:Roboto,Arial,Helvetica,sans-serif;color:#fff;
 </div></div>
 
 <script>
-/* Kunci penyimpanan, berbeda tiap file agar data dua toko tidak bertabrakan */
+/* Kunci penyimpanan, berbeda tiap file agar data antar toko tidak bertabrakan */
 var KUNCI = 'spinwheel-toko1';
 
 /* Logo merah, dipakai di tengah kalimat judul lewat token [POLYTRON] */
@@ -369,11 +395,11 @@ var TEMA = {
 };
 
 var CONTOH = {
-  tema:'pastiuntung', brand:'POLYTRON', toko:'Nuansa',
+  tema:'pastiuntung', brand:'POLYTRON', toko:'Toko Nuansa Matos',
   judul:'Pasti Untung',
   sub:'Beli Produk [POLYTRON] Sekarang<br>&amp; Putar Roda Keberuntunganmu!',
   sub2:'Total Hadiah Jutaan Rupiah',
-  logo:'data:image/png;base64,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', form:'', sheet:'', kurang:1, terkirim:0, musik:1, vol:45, penuh:1,
+  logo:'data:image/png;base64,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', form:'', sheet:'', kurang:1, terkirim:0, musik:1, vol:45, penuh:1, demo:1, demoDetik:60,
   /* seg = berapa potongan yang tampil di roda (menentukan peluang)
      q   = stok sebenarnya. Keduanya sengaja dipisah karena hadiah langka
            tetap perlu 1 potongan agar terlihat, meski stoknya sedikit. */
@@ -445,6 +471,8 @@ function bedaDariBawaan(){
   if (!C.antre) C.antre = [];
   if (C.musik === undefined) C.musik = 1;
   if (C.penuh === undefined) C.penuh = 1;
+  if (C.demo === undefined) C.demo = 1;
+  if (C.demoDetik === undefined) C.demoDetik = 60;
   if (C.vol === undefined) C.vol = 45;
   if (!C.terkirim) C.terkirim = 0;
   if (typeof C.set !== 'number' || C.set < 0 || C.set >= C.daftar.length) C.set = 0;
@@ -724,14 +752,14 @@ function adegan(id){
 function popTampil(zonk){ el('pop').className = 'on' + (zonk ? ' zonk' : ''); }
 function popTutup(){ el('pop').className = ''; }
 function popAda(){ return el('pop').className.indexOf('on') >= 0; }
-function keIdle(){ clearTimeout(kembaliT); popTutup(); adegan('idle'); renderPapan(); }
+function keIdle(){ clearTimeout(kembaliT); popTutup(); adegan('idle'); renderPapan(); jadwalDemo(); }
 
 function putar(){
   if (sibuk) return;
   if (!tersedia().length){ alert('Semua hadiah sudah habis. Buka Pengaturan untuk mengisi ulang.'); return; }
 
   sibuk = true;
-  clearTimeout(kembaliT);
+  clearTimeout(kembaliT); clearTimeout(demoT);
   var seg = potongan();
   var idx = Math.floor(Math.random() * seg.length);   // satu potongan, satu peluang
   var menang = seg[idx];
@@ -778,12 +806,28 @@ function tampilHasil(namaHadiah){
 }
 
 /* ── Kendali ────────────────────────────────────────────── */
+/* Menelusuri ke atas untuk tahu apakah yang diklik memang hub.
+   Tidak memakai closest() karena belum ada di sebagian browser TV. */
+function didalamHub(n){
+  while (n && n !== document.body){
+    if (n.className && String(n.className).indexOf('hub') >= 0) return true;
+    n = n.parentNode;
+  }
+  return false;
+}
+
 document.onclick = function(e){
   if (el('adm').className.indexOf('on') >= 0) return;
   if (e.target.id === 'gear') return;
   mulaiMusik(); mintaLayarPenuh();
+
+  // Menutup demo dan popup boleh dari mana saja — keduanya tidak
+  // mengurangi stok, jadi tidak berbahaya kalau tersenggol.
+  if (demoJalan){ stopDemo(); return; }
   if (popAda()){ keIdle(); return; }
-  putar();
+
+  // Memutar roda HANYA kalau yang diklik betul-betul tombol PUTAR
+  if (didalamHub(e.target)) putar();
 };
 /* Kode tombol berbeda-beda antar merek TV, jadi semuanya diterima:
    13 Enter (dipakai tombol OK di Android TV, Tizen, dan webOS)
@@ -805,7 +849,11 @@ document.onkeydown = function(e){
   if (punya(OK, k)){
     e.preventDefault();
     mulaiMusik(); mintaLayarPenuh();
-    if (popAda()) keIdle(); else putar();
+    if (demoJalan){ stopDemo(); return; }
+    if (popAda()){ keIdle(); return; }
+    // Untuk remote tanpa kursor: tombol OK hanya memutar kalau fokus
+    // memang sedang berada di tombol PUTAR.
+    if (document.activeElement && document.activeElement.id === 'hub1') putar();
     return;
   }
 
@@ -813,6 +861,7 @@ document.onkeydown = function(e){
      tekan Kembali lima kali dalam tiga detik. */
   if (punya(BACK, k)){
     e.preventDefault();
+    if (demoJalan){ stopDemo(); return; }
     var now = new Date().getTime();
     if (now - backSaat > 3000){ backSaat = now; backHit = 1; } else backHit++;
     if (backHit >= 5){ backHit = 0; bukaAdm(); return; }
@@ -832,6 +881,8 @@ function bukaAdm(){
   el('cForm').value = C.form || '';
   el('cMusik').value = C.musik;
   el('cPenuh').value = C.penuh;
+  el('cDemo').value = C.demo;
+  el('cDemoDetik').value = C.demoDetik;
   el('cVol').value = C.vol;
   infoForm(); infoMusik();
   renderTema(); renderTbl(); renderRiwayat();
@@ -998,6 +1049,13 @@ el('bKirimUlang').onclick = function(){
   alert('Mencoba mengirim ' + n + ' catatan. Sisa tertunda: ' + C.antre.length);
 };
 el('cKurang').onchange = function(){ C.kurang = +this.value; simpan(); };
+el('cDemo').onchange = function(){
+  C.demo = +this.value; simpan();
+  if (C.demo == 0) stopDemo(); else jadwalDemo();
+};
+el('cDemoDetik').oninput = function(){
+  C.demoDetik = Math.max(15, Math.min(600, +this.value || 60)); simpan(); jadwalDemo();
+};
 el('cPenuh').onchange = function(){
   C.penuh = +this.value; simpan();
   if (C.penuh == 0) keluarLayarPenuh();
@@ -1040,6 +1098,33 @@ el('bReset').onclick = function(){
   if (!confirm('Kembalikan semua pengaturan ke contoh awal?')) return;
   C = JSON.parse(JSON.stringify(CONTOH)); simpan(); bukaAdm(); terapkan();
 };
+
+/* ── Layar demo saat menganggur ──────────────────────────
+   Video sengaja dibisukan. Selain karena musik latar sudah berjalan,
+   video tanpa suara adalah satu-satunya yang boleh diputar otomatis
+   oleh browser tanpa menunggu tombol ditekan. */
+var demoT = null, demoJalan = false;
+
+function jadwalDemo(){
+  clearTimeout(demoT);
+  if (C.demo == 0) return;
+  var jeda = (C.demoDetik === undefined ? 60 : C.demoDetik) * 1000;
+  demoT = setTimeout(mulaiDemo, jeda);
+}
+function mulaiDemo(){
+  if (sibuk || popAda() || el('adm').className.indexOf('on') >= 0) { jadwalDemo(); return; }
+  var v = el('demo');
+  if (!v) return;
+  v.className = 'on';
+  demoJalan = true;
+  try { v.currentTime = 0; var j = v.play(); if (j && j.catch) j.catch(function(){}); } catch(e){}
+}
+function stopDemo(){
+  var v = el('demo');
+  if (v){ v.className = ''; try { v.pause(); } catch(e){} }
+  demoJalan = false;
+  jadwalDemo();
+}
 
 /* ── Layar penuh ─────────────────────────────────────────
    Browser hanya mengizinkan layar penuh sebagai respons atas tindakan
@@ -1228,6 +1313,7 @@ function pesanSheet(t){
 
 terapkan();
 siapkanMusik();
+jadwalDemo();
 muatSheet(true);
 setInterval(function(){ if (!sibuk) muatSheet(true); }, 300000);
 
