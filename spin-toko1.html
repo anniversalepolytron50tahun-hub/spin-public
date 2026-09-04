@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spin the Wheel — Toko 1</title>
+<style>
+/* Sengaja memakai CSS yang konservatif: tanpa container query, tanpa
+   aspect-ratio, tanpa gap di flexbox. Browser bawaan Smart TV sering
+   tertinggal beberapa tahun dari browser desktop. */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#07040D}
+body{font-family:Roboto,Arial,Helvetica,sans-serif;color:#fff;
+  -webkit-user-select:none;user-select:none;cursor:default}
+
+#stage{position:absolute;top:0;left:0;width:1920px;height:1080px;
+  transform-origin:top left;overflow:hidden;background:var(--bg1)}
+#bg{position:absolute;top:-10%;left:-10%;width:120%;height:120%}
+#vig{position:absolute;top:0;left:0;width:100%;height:100%;
+  background:radial-gradient(76% 76% at 50% 46%,transparent 42%,rgba(0,3,12,.72) 100%)}
+
+.scene{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;
+  transition:opacity .4s ease;z-index:3}
+.scene.on{opacity:1}
+
+#logo{position:absolute;top:54px;left:90px;z-index:6;font-weight:900;font-size:26px;
+  letter-spacing:.26em;max-width:900px;overflow:hidden;white-space:nowrap}
+#logoImg{position:absolute;top:48px;left:90px;z-index:6;height:48px;width:auto;display:none}
+/* Petunjuk sekali pakai — hilang sendiri begitu daftar hadiah diubah,
+   supaya tidak mengganggu tampilan di toko. */
+#hint{position:absolute;left:90px;bottom:44px;z-index:7;font-size:19px;
+  color:rgba(255,255,255,.42);display:none}
+#hint b{color:var(--ac1)}
+
+/* Layar diam */
+#idle .in{position:absolute;top:0;left:0;width:100%;height:100%}
+#idle .kiri{position:absolute;left:78px;top:50%;width:900px;margin-top:-252px}
+/* "PASTI UNTUNG" magenta di atas blok kuning miring, persis seperti KV */
+#blok{display:inline-block;background:var(--ac1);padding:22px 54px 26px;
+  transform:skewX(-12deg);margin-left:10px}
+#blok>div{transform:skewX(12deg)}
+#idle p{font-size:30px;font-weight:700;color:#111;margin:0 0 22px;line-height:1.4}
+#idle h1{font-weight:900;font-style:italic;font-size:80px;line-height:.98;letter-spacing:-.03em;
+  text-transform:uppercase;color:var(--ac2)}
+#sub2{font-size:24px;font-weight:900;font-style:italic;color:#111;
+  letter-spacing:.02em;text-transform:uppercase;margin-top:12px;line-height:1.15}
+/* Kata POLYTRON tidak diketik, tapi memakai gambar logo aslinya.
+   Huruf terakhirnya "n" berlengkung, bukan N kapital — tidak ada font
+   yang bisa menirunya. Dimiringkan sedikit agar menyatu dengan judul
+   yang memang italic. */
+/* Tinggi logo disamakan dengan tinggi huruf kapital di sekitarnya,
+   bukan tinggi baris — kalau kebesaran, jarak antar baris ikut melar. */
+#idle img.merek{height:.74em;width:auto;vertical-align:-.02em;margin:0 .1em}
+#idle p img.merek{height:.78em;vertical-align:-.04em}
+#strip{margin-top:36px;height:28px;font-size:0}
+#strip i{display:inline-block;width:12px;height:28px;margin-right:6px;
+  transform:skewX(-16deg);border-radius:2px}
+/* Papan hadiah keluar. Hanya muncul setelah ada putaran — sebelum itu
+   layar dibiarkan lega seperti KV aslinya. */
+#papan{display:none;margin-top:26px}
+#idle.ada #papan{display:block}
+#papan table{border-collapse:collapse;width:100%;max-width:820px}
+#papan th{text-align:left;padding:9px 16px;background:var(--ac1);color:#111;
+  font-size:17px;font-weight:900;font-style:italic;text-transform:uppercase;letter-spacing:.04em}
+#papan th.r{text-align:right}
+#papan td{padding:9px 16px;font-size:25px;font-weight:700;
+  background:rgba(255,255,255,.07);border-bottom:2px solid var(--bg1)}
+#papan td.r{text-align:right;font-weight:900;color:var(--ac1);font-variant-numeric:tabular-nums}
+#papan .tot td{background:rgba(246,255,0,.14);color:#fff}
+#papan .tot td.r{color:var(--ac1)}
+
+/* Mode ringkas: begitu ada hadiah keluar, blok judul mengecil dan naik
+   supaya papan hadiah punya ruang. */
+#idle.ada .kiri{margin-top:-378px}
+#idle.ada #blok{padding:15px 40px 18px}
+#idle.ada #subjudul{font-size:23px;margin-bottom:13px}
+#idle.ada h1{font-size:54px}
+#idle.ada #sub2{font-size:19px;margin-top:9px}
+#idle.ada #strip{margin-top:22px;height:18px}
+#idle.ada #strip i{width:9px;height:18px;margin-right:5px}
+#idle.ada #tekan{margin-top:26px;font-size:19px;padding:11px 26px}
+#idle.ada #tempat{margin-top:24px;font-size:36px}
+
+#tempat{margin-top:34px;font-size:48px;font-weight:900;letter-spacing:.08em;
+  color:rgba(255,255,255,.88);text-transform:uppercase}
+#tekan{margin-top:46px;display:inline-block;background:var(--ac1);color:#111;
+  font-weight:900;font-style:italic;font-size:22px;padding:13px 30px;text-transform:uppercase;
+  animation:nyala 1.8s infinite}
+@keyframes nyala{0%,100%{opacity:1}50%{opacity:.55}}
+
+/* Roda */
+.wheelbox{position:absolute;right:64px;top:50%;width:820px;height:820px;margin-top:-410px}
+/* Saat memutar, roda dibesarkan lagi dan dipusatkan — inilah momen yang
+   ditonton dari seberang toko, jadi pantas mengisi hampir seluruh layar. */
+.wheelbox.besar{width:920px;height:920px;margin-top:-460px;left:50%;margin-left:-460px;right:auto}
+.rot{width:100%;height:100%;transform:rotate(0deg)}
+.rot.spin{transition:transform 5.6s cubic-bezier(.13,.72,.16,1)}
+/* Lampu bingkai berkejaran saat roda diputar. Yang dianimasikan hanya
+   opacity — properti paling ringan, aman untuk TV box berspesifikasi rendah. */
+.rot .bulb{opacity:1}
+.rot.spin .bulb,
+.rot.nyala .bulb{animation:lampu .6s linear infinite}
+@keyframes lampu{
+  0%   {opacity:1}
+  32%  {opacity:1}
+  33%  {opacity:.14}
+  100% {opacity:.14}
+}
+/* Halo dijaga tetap redup, kalau ikut penuh justru terlihat seperti
+   noda kuning besar, bukan cahaya lampu. */
+.rot .bulb.halo{opacity:.28}
+.rot.spin .bulb.halo,
+.rot.nyala .bulb.halo{animation:halo .6s linear infinite}
+@keyframes halo{
+  0%   {opacity:.45}
+  32%  {opacity:.45}
+  33%  {opacity:0}
+  100% {opacity:0}
+}
+.rot.pelan{animation:muter 22s linear infinite}
+@keyframes muter{to{transform:rotate(360deg)}}
+.needle{position:absolute;top:-20px;left:50%;margin-left:-26px;width:0;height:0;z-index:5;
+  border-left:26px solid transparent;border-right:26px solid transparent;border-top:58px solid var(--ac1)}
+.hub{position:absolute;top:50%;left:50%;margin:-72px 0 0 -72px;width:144px;height:144px;
+  border-radius:50%;background:var(--ac2);z-index:4;text-align:center;line-height:144px;
+  font-weight:900;font-style:italic;font-size:30px;box-shadow:0 0 0 12px var(--bg1)}
+
+/* Hasil tampil sebagai popup DI ATAS roda, supaya konsumen masih melihat
+   di potongan mana jarum berhenti — itu yang membuat hasilnya terasa jujur. */
+#pop{position:absolute;top:0;left:0;width:100%;height:100%;z-index:8;
+  background:rgba(4,2,8,.74);display:none}
+#pop.on{display:block}
+#pop .card{position:absolute;top:50%;left:50%;width:1180px;
+  background:var(--bg1);border:5px solid var(--ac1);border-radius:38px;
+  padding:58px 68px 52px;text-align:center;box-shadow:0 40px 130px rgba(0,0,0,.85);
+  transform:translate(-50%,-50%);animation:masuk .45s cubic-bezier(.2,1.35,.4,1)}
+@keyframes masuk{
+  from{transform:translate(-50%,-50%) scale(.82);opacity:0}
+  to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+#pop .lb{font-size:27px;letter-spacing:.16em;font-weight:900;text-transform:uppercase;color:var(--ac3)}
+#pop .nm{font-weight:900;font-style:italic;font-size:112px;line-height:1;letter-spacing:-.035em;
+  margin:30px 0 10px;color:var(--ac1);text-transform:uppercase;word-wrap:break-word}
+#pop.zonk .card{border-color:var(--ac2)}
+#pop.zonk .nm{color:#fff;font-size:84px}
+#pop.zonk .lb{color:var(--ac2)}
+
+
+/* Panel admin */
+#adm{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(7,4,13,.94);
+  z-index:50;display:none;overflow:auto;padding:34px}
+#adm.on{display:block}
+.wrap{max-width:820px;margin:0 auto}
+#adm h2{font-size:24px;font-weight:900;font-style:italic;margin-bottom:6px}
+#adm .sub{color:#8E86A3;font-size:14px;line-height:1.6;margin-bottom:22px}
+#adm h3{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ac1);
+  font-weight:900;margin:26px 0 12px}
+#adm label{display:block;margin-bottom:14px}
+#adm label span{display:block;font-size:12px;color:#8E86A3;margin-bottom:6px;font-weight:700}
+#adm input,#adm select,#adm textarea{width:100%;padding:11px 13px;border:1px solid #2A2438;
+  border-radius:9px;background:#0C0A14;color:#fff;font-family:inherit;font-size:14px}
+#adm input:focus,#adm select:focus,#adm textarea:focus{outline:none;border-color:var(--ac1)}
+#adm textarea{min-height:70px;font-size:12px;font-family:monospace}
+.two{overflow:hidden}
+.two>label{float:left;width:49%}
+.two>label:last-child{float:right}
+#tbl{width:100%;border-collapse:collapse;font-size:14px}
+#tbl th{text-align:left;padding:8px 10px;color:#8E86A3;font-size:10.5px;text-transform:uppercase;
+  letter-spacing:.1em;background:rgba(255,255,255,.05)}
+#tbl td{padding:4px 10px;border-bottom:1px solid #2A2438}
+#tbl input{border:1px solid transparent;background:transparent;padding:8px}
+#tbl input:hover{border-color:#2A2438}
+#tbl .q{width:96px;text-align:right;font-family:monospace}
+#tbl .p{width:88px;text-align:right;color:var(--ac1);font-weight:700;font-family:monospace;font-size:13px}
+#tbl .x{color:#8E86A3;cursor:pointer;padding:4px 9px;font-size:18px}
+#tbl .x:hover{color:#EA078A}
+.sw{display:inline-block;width:22px;height:22px;border-radius:5px;vertical-align:middle;margin-right:10px}
+.btn{font-family:inherit;font-size:14px;padding:11px 20px;border-radius:10px;border:1px solid #2A2438;
+  background:transparent;color:#fff;cursor:pointer;font-weight:700;margin:0 8px 8px 0}
+.btn:hover{background:rgba(255,255,255,.07)}
+.btn.pri{background:var(--ac1);color:#111;border-color:var(--ac1);font-style:italic;font-weight:900}
+.btn.dgr{color:#FF8A8F;border-color:rgba(255,90,95,.35)}
+.note{border-radius:10px;padding:13px 15px;font-size:13px;line-height:1.6;margin-top:13px;
+  background:rgba(255,255,255,.04);border-left:3px solid var(--ac1);color:#8E86A3}
+.note b{color:#fff}
+.tema{display:inline-block;width:64px;height:44px;border-radius:9px;margin:0 9px 9px 0;
+  cursor:pointer;border:2px solid transparent;vertical-align:top}
+.tema.on{border-color:#fff}
+#gear{position:fixed;right:14px;bottom:12px;z-index:60;font-size:22px;color:rgba(255,255,255,.18);
+  cursor:pointer;padding:10px;background:none;border:none;font-family:inherit}
+#gear:hover,#gear:focus{color:rgba(255,255,255,.7);outline:2px solid rgba(255,255,255,.4);border-radius:8px}
+</style>
+</head>
+<body tabindex="0">
+
+<div id="stage">
+  <div id="bg"></div><div id="vig"></div>
+  <div id="logo"></div><img id="logoImg" alt="">
+
+  <div class="scene on" id="idle"><div class="in">
+    <div class="kiri">
+      <div id="blok"><div>
+        <p id="subjudul"></p>
+        <h1 id="judul"></h1>
+        <div id="sub2"></div>
+      </div></div>
+      <div id="papan"></div>
+      <div id="strip"></div>
+      <div id="tekan">Tekan OK untuk memutar</div>
+      <div id="tempat"></div>
+    </div>
+    <div class="wheelbox">
+      <div class="needle"></div><div class="rot pelan" id="roda1"></div>
+      <div class="hub" id="hub1">PUTAR</div>
+    </div>
+  </div></div>
+
+  <div class="scene" id="play">
+    <div class="wheelbox besar">
+      <div class="needle"></div><div class="rot" id="roda2"></div>
+      <div class="hub" id="hub2">PUTAR</div>
+    </div>
+  </div>
+
+  <div id="hint">Hadiah masih contoh bawaan. Tekan <b>A</b>, atau tombol <b>Kembali 5&times;</b>,
+    untuk mengubah daftar hadiah.</div>
+
+  <div id="pop"><div class="card">
+    <div class="lb" id="rlb"></div>
+    <div class="nm" id="rnm"></div>
+  </div></div>
+</div>
+
+<button id="gear" aria-label="Pengaturan">&#9881;</button>
+
+<div id="adm"><div class="wrap">
+  <h2>Pengaturan</h2>
+  <p class="sub">Tersimpan di TV ini. Tekan <b style="color:#fff">Esc</b> atau tombol Kembali untuk menutup.</p>
+
+  <h3>Tampilan</h3>
+  <div id="temaBox"></div>
+  <div class="two">
+    <label><span>Nama brand</span><input id="cBrand"></label>
+    <label><span>Nama tempat (pojok kiri bawah)</span><input id="cToko"></label>
+  </div>
+  <div class="two">
+    <label><span>Judul besar — tulis <b style="color:#F6FF00">[POLYTRON]</b> untuk menyisipkan logo</span>
+      <input id="cJudul"></label>
+    <label><span>Kalimat atas — <b style="color:#F6FF00">[POLYTRON]</b> menyisipkan logo</span><input id="cSub"></label>
+  </div>
+  <div class="two">
+    <label><span>Kalimat bawah</span><input id="cSub2"></label>
+  </div>
+  <label><span>Logo (opsional)</span><input type="file" id="cLogo" accept="image/*"></label>
+
+  <h3>Hadiah &amp; jumlah</h3>
+  <table id="tbl"><thead><tr><th>Hadiah</th>
+    <th style="text-align:right">Tampil di roda</th>
+    <th style="text-align:right">Stok asli</th>
+    <th style="text-align:right">Peluang</th><th></th></tr></thead><tbody id="tbody"></tbody>
+    <tfoot><tr><td style="font-weight:700">TOTAL</td><td class="q" id="tot" style="font-weight:700"></td>
+    <td class="q" id="totq" style="font-weight:700"></td><td></td><td></td></tr></tfoot></table>
+  <div class="note"><b>Tampil di roda</b> = berapa potongan yang terlihat, dan itulah yang menentukan
+    peluang. <b>Stok asli</b> = jumlah barang sebenarnya. Keduanya boleh berbeda — misalnya Voucher 250k
+    punya 3 unit tapi cukup menempati 1 potongan. Begitu stok habis, hadiahnya hilang dari roda.</div>
+  <button class="btn" id="bAdd">+ Tambah hadiah</button>
+  <button class="btn" id="bBawaan">Muat daftar hadiah bawaan</button>
+  <div id="bawaanInfo"></div>
+  <label style="margin-top:14px"><span>Kurangi stok setiap kali hadiah keluar?</span>
+    <select id="cKurang"><option value="1">Ya — stok habis lalu hadiah hilang dari roda</option>
+      <option value="0">Tidak — stok tidak berubah, dicatat manual saja</option></select></label>
+
+  <h3>Riwayat hadiah yang sudah keluar</h3>
+  <div id="riwayatBox"></div>
+  <button class="btn" id="bRwCsv">Unduh CSV</button>
+  <button class="btn dgr" id="bRwHapus">Kosongkan riwayat</button>
+
+  <h3>Sumber daftar hadiah</h3>
+  <label><span>Link CSV Google Sheet (kosongkan kalau mau isi manual di sini)</span>
+    <textarea id="cSheet" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?gid=0&single=true&output=csv"></textarea></label>
+  <div id="sheetInfo"></div>
+  <div class="note">Kalau diisi, daftar hadiah di atas <b>ditimpa</b> oleh isi Sheet setiap kali halaman
+    dimuat dan tiap 5 menit. Satu Sheet bisa dipakai semua TV — ubah sekali, semua ikut berubah.
+    Kolom A nama hadiah, kolom B jumlah tampil di roda, kolom C stok asli
+    (kolom C boleh dikosongkan — berarti sama dengan kolom B).</div>
+
+  <h3>Pencatatan otomatis ke Google Form</h3>
+  <label><span>Link isi-otomatis Google Form (kosongkan kalau tidak dipakai)</span>
+    <textarea id="cForm" placeholder="tempel link pre-filled di sini"></textarea></label>
+  <div id="formInfo"></div>
+  <button class="btn" id="bKirimUlang">Kirim ulang yang tertunda</button>
+  <div class="note"><b>Cara mendapatkannya:</b> di Google Form Anda, titik tiga &rarr;
+    <b>Get pre-filled link</b>. Isi kolom hadiah dengan kata <b>HADIAH</b>, kolom toko dengan
+    <b>TOKO</b>, kolom waktu dengan <b>WAKTU</b>, lalu Submit dan salin linknya ke sini.<br><br>
+    Setiap putaran langsung terkirim ke Google Sheet Anda. Kalau internet putus, datanya
+    <b>diantrekan</b> dan dikirim otomatis begitu tersambung lagi.</div>
+
+  <h3>Cadangkan</h3>
+  <button class="btn" id="bExp">Simpan ke file</button>
+  <button class="btn" id="bImpBtn">Muat dari file</button>
+  <input type="file" id="bImp" accept=".json" style="display:none">
+  <button class="btn dgr" id="bReset">Kembalikan ke contoh awal</button>
+  <div class="note">Pengaturan ini tersimpan di browser TV ini saja. Kalau ada beberapa TV,
+    atur satu TV lalu <b>Simpan ke file</b>, dan muat file itu di TV lainnya.</div>
+
+  <div style="margin-top:26px"><button class="btn pri" id="bTutup">Tutup</button></div>
+</div></div>
+
+<script>
+/* Kunci penyimpanan, berbeda tiap file agar data dua toko tidak bertabrakan */
+var KUNCI = 'spinwheel-toko1';
+
+/* Logo merah, dipakai di tengah kalimat judul lewat token [POLYTRON] */
+var LOGO_MERAH = 'data:image/png;base64,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';
+
+var TEMA = {
+  /* Diambil dari FA_tripod_A1_anniversale_pasti_untung.tif:
+     kuning blok #F6FF00, magenta PASTI UNTUNG #E20561, hijau #00FF66,
+     merah-oranye #FF4315, emas lampu #F5B73C, latar #000715 */
+  pastiuntung:{bg1:'#000715',ac1:'#F6FF00',ac2:'#E20561',ac3:'#00FF66',
+    bg:'radial-gradient(40% 55% at 12% 20%,rgba(226,5,97,.50),transparent 62%),'
+      +'radial-gradient(44% 50% at 86% 26%,rgba(0,163,224,.42),transparent 64%),'
+      +'radial-gradient(46% 56% at 58% 82%,rgba(0,255,102,.26),transparent 62%),'
+      +'radial-gradient(34% 44% at 30% 86%,rgba(255,67,21,.40),transparent 60%)',
+    spek:['#D9A526','#911F1F','#0E628F','#34343E','#14522E','#63166B','#7A4A16','#1E4A6B','#5A2340','#2E4A2E'],
+    emas:true},
+  anniversale:{bg1:'#07040D',ac1:'#F6FF00',ac2:'#EE1C25',ac3:'#00FF66',
+    bg:'radial-gradient(38% 52% at 14% 22%,rgba(234,7,138,.55),transparent 62%),'
+      +'radial-gradient(42% 48% at 84% 26%,rgba(0,163,224,.44),transparent 64%),'
+      +'radial-gradient(46% 56% at 58% 80%,rgba(0,255,102,.28),transparent 62%),'
+      +'radial-gradient(34% 44% at 30% 84%,rgba(238,28,37,.42),transparent 60%)',
+    spek:['#EA078A','#FF0055','#FF3B00','#FF9500','#F6FF00','#00FF66','#00C9A7','#00A3E0','#5B4BFF','#B026FF']},
+  malam:{bg1:'#050B18',ac1:'#5BE9FF',ac2:'#1B3A8C',ac3:'#9BFFB0',
+    bg:'radial-gradient(40% 55% at 18% 20%,rgba(91,233,255,.35),transparent 62%),'
+      +'radial-gradient(45% 50% at 82% 30%,rgba(91,75,255,.40),transparent 64%),'
+      +'radial-gradient(45% 55% at 55% 85%,rgba(0,120,200,.30),transparent 62%)',
+    spek:['#5BE9FF','#3BA9F5','#5B4BFF','#8B5CF6','#00C9A7','#2ED573','#FFC24B','#FF7A45','#F26BB8','#B026FF']},
+  emas:{bg1:'#12080A',ac1:'#FFD166',ac2:'#9E1B1B',ac3:'#FFE9A8',
+    bg:'radial-gradient(40% 55% at 16% 20%,rgba(255,209,102,.32),transparent 62%),'
+      +'radial-gradient(45% 50% at 84% 28%,rgba(158,27,27,.55),transparent 64%),'
+      +'radial-gradient(45% 55% at 55% 86%,rgba(120,60,10,.45),transparent 62%)',
+    spek:['#FFD166','#F79D5C','#E4572E','#9E1B1B','#C9A227','#7B6D3F','#D9B08C','#B5651D','#8C3B0E','#EFC88B']},
+  segar:{bg1:'#04120C',ac1:'#B4FF39',ac2:'#0B6E4F',ac3:'#FFFFFF',
+    bg:'radial-gradient(40% 55% at 15% 22%,rgba(180,255,57,.30),transparent 62%),'
+      +'radial-gradient(45% 50% at 85% 28%,rgba(11,110,79,.60),transparent 64%),'
+      +'radial-gradient(45% 55% at 55% 85%,rgba(0,180,140,.30),transparent 62%)',
+    spek:['#B4FF39','#4BE38A','#00C9A7','#00A3E0','#7BD389','#F6FF00','#FF9500','#EA078A','#5B4BFF','#2ED573']}
+};
+
+var CONTOH = {
+  tema:'pastiuntung', brand:'POLYTRON', toko:'Nuansa',
+  judul:'Pasti Untung',
+  sub:'Beli Produk [POLYTRON] Sekarang<br>&amp; Putar Roda Keberuntunganmu!',
+  sub2:'Total Hadiah Jutaan Rupiah',
+  logo:'data:image/png;base64,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', form:'', sheet:'', kurang:1, terkirim:0,
+  /* seg = berapa potongan yang tampil di roda (menentukan peluang)
+     q   = stok sebenarnya. Keduanya sengaja dipisah karena hadiah langka
+           tetap perlu 1 potongan agar terlihat, meski stoknya sedikit. */
+  set:0,
+  daftar:[ { nama:'Toko 1', hadiah:[
+    {n:'Rice Cooker',         seg:1, q:2},
+    {n:'Diskon 250k',         seg:1, q:4},
+    {n:'Diskon 100k',         seg:3, q:25},
+    {n:'Diskon 50k',          seg:5, q:35},
+    {n:'Gelas Tyeso',         seg:2, q:15},
+    {n:'Merch Polytron',      seg:4, q:30}
+  ]} ],
+  riwayat:[]
+};
+
+var C, adaSimpan = true;
+try {
+  var s = localStorage.getItem(KUNCI);
+  C = s ? JSON.parse(s) : JSON.parse(JSON.stringify(CONTOH));
+} catch (e) { adaSimpan = false; C = JSON.parse(JSON.stringify(CONTOH)); }
+
+/* Konfigurasi bisa dititipkan lewat alamat: spin-tv.html#cfg=xxxx
+   Ini jalur tercepat memasang pengaturan ke TV tanpa mengetik apa pun
+   di remote — cukup buka sekali, lalu tersimpan di TV itu. */
+(function(){
+  var h = window.location.hash || '';
+  var i = h.indexOf('cfg=');
+  if (i < 0) return;
+  try {
+    var teks = decodeURIComponent(h.substring(i + 4));
+    var baru = JSON.parse(decodeURIComponent(escape(atob(teks))));
+    if (baru && baru.hadiah && baru.hadiah.length){
+      if (!baru.logo && C.logo) baru.logo = C.logo;   // logo tetap milik TV ini
+      C = baru;
+      try { localStorage.setItem(KUNCI, JSON.stringify(C)); } catch(e){}
+    }
+  } catch(e){}
+  // Bersihkan alamat supaya tidak termuat ulang terus-menerus
+  try { window.location.replace(window.location.pathname + window.location.search); } catch(e){}
+})();
+
+function simpan(){
+  try { localStorage.setItem(KUNCI, JSON.stringify(C)); } catch(e){ adaSimpan = false; }
+}
+function el(id){ return document.getElementById(id); }
+
+function bawaanSet(){
+  return (CONTOH.daftar[C.set] || CONTOH.daftar[0]).hadiah;
+}
+function bedaDariBawaan(){
+  var b = bawaanSet(), h = hadiah(), i;
+  if (h.length !== b.length) return true;
+  for (i = 0; i < h.length; i++){
+    if (h[i].n !== b[i].n || h[i].seg !== b[i].seg || h[i].q !== b[i].q) return true;
+  }
+  return false;
+}
+
+/* Struktur lama menyimpan satu daftar hadiah. Sekarang ada beberapa set
+   (satu per toko), jadi data lama dipindahkan menjadi set pertama. */
+(function(){
+  // C.hadiah dibaca langsung, bukan lewat hadiah() — fungsi itu justru
+  // membutuhkan C.daftar yang baru akan dibuat di sini.
+  if (!C.daftar || !C.daftar.length){
+    C.daftar = [{ nama: 'Toko 1', hadiah: (C.hadiah && C.hadiah.length) ? C.hadiah : [] }];
+    C.set = 0;
+  }
+  if (!C.riwayat) C.riwayat = [];
+  if (!C.antre) C.antre = [];
+  if (!C.terkirim) C.terkirim = 0;
+  if (typeof C.set !== 'number' || C.set < 0 || C.set >= C.daftar.length) C.set = 0;
+
+  for (var d = 0; d < C.daftar.length; d++){
+    if (!C.daftar[d]) { C.daftar[d] = { nama: 'Set ' + (d+1), hadiah: [] }; continue; }
+    if (!C.daftar[d].hadiah) C.daftar[d].hadiah = [];
+    if (!C.daftar[d].nama) C.daftar[d].nama = 'Set ' + (d+1);
+    var hh = C.daftar[d].hadiah;
+    for (var i = 0; i < hh.length; i++){
+      if (hh[i].seg === undefined) hh[i].seg = 1;
+      if (hh[i].q === undefined) hh[i].q = hh[i].seg;
+    }
+  }
+  if (C.hadiah) delete C.hadiah;
+})();
+
+/* Semua kode lain memakai hadiah() agar tidak perlu tahu set mana yang aktif */
+function hadiah(){ return C.daftar[C.set].hadiah; }
+function namaSet(){ return C.daftar[C.set].nama; }
+function masihContoh(){ return !bedaDariBawaan(); }
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+/* Berurutan, bukan lompat dua. Rumus lama (i*2)%10 membuat hadiah ke-6
+   melingkar kembali ke warna hadiah ke-1, jadi keduanya identik. */
+function warna(i){ var t = TEMA[C.tema] || TEMA.anniversale; return t.spek[i % t.spek.length]; }
+
+/* ── Skala panggung ke ukuran layar TV ──────────────────── */
+function skala(){
+  var k = Math.min(window.innerWidth/1920, window.innerHeight/1080);
+  var st = el('stage');
+  st.style.transform = 'scale(' + k + ')';
+  st.style.left = ((window.innerWidth - 1920*k)/2) + 'px';
+  st.style.top  = ((window.innerHeight - 1080*k)/2) + 'px';
+}
+window.onresize = skala;
+
+/* ── Terapkan tema & teks ───────────────────────────────── */
+function terapkan(){
+  var t = TEMA[C.tema] || TEMA.anniversale;
+  var r = document.documentElement.style;
+  r.setProperty('--bg1', t.bg1); r.setProperty('--ac1', t.ac1);
+  r.setProperty('--ac2', t.ac2); r.setProperty('--ac3', t.ac3);
+  el('bg').style.background = t.bg;
+
+  el('logo').textContent = C.logo ? '' : C.brand;
+  el('logoImg').style.display = C.logo ? 'block' : 'none';
+  if (C.logo) el('logoImg').src = C.logo;
+  el('judul').innerHTML = String(C.judul).replace(/\[POLYTRON\]/g,
+    '<img class="merek" src="' + LOGO_MERAH + '" alt="POLYTRON">');
+  el('tempat').textContent = C.toko || '';
+  el('tempat').style.display = C.toko ? 'block' : 'none';
+  el('subjudul').innerHTML = String(C.sub || '').replace(/\[POLYTRON\]/g,
+    '<img class="merek gelap" src="' + LOGO_MERAH + '" alt="POLYTRON">');
+  el('subjudul').style.display = C.sub ? 'block' : 'none';
+  el('sub2').textContent = C.sub2 || '';
+  el('sub2').style.display = C.sub2 ? 'block' : 'none';
+
+  var h = '';
+  for (var i = 0; i < 18; i++){
+    var x = i/17*(t.spek.length-1);
+    h += '<i style="background:linear-gradient(180deg,' + t.spek[Math.floor(x)]
+       + ',' + t.spek[Math.ceil(x)] + ')"></i>';
+  }
+  el('strip').innerHTML = h;
+  gambar(el('roda1')); gambar(el('roda2'));
+  el('hint').style.display = masihContoh() ? 'block' : 'none';
+  renderPapan();
+  skala();
+}
+
+/* ── Menggambar roda ────────────────────────────────────── */
+function tersedia(){
+  var out = [];
+  for (var i = 0; i < hadiah().length; i++){
+    var h = hadiah()[i];
+    if (h.n && h.q > 0 && h.seg > 0) out.push({ i:i, n:h.n, seg:h.seg, q:h.q });
+  }
+  return out;
+}
+
+/* Menyusun urutan potongan roda.
+   Hadiah yang menempati beberapa potongan disebar berjauhan, seperti roda
+   undian sungguhan. Kalau enam potongan Merchandise berkumpul jadi satu
+   blok besar, konsumen langsung merasa rodanya berat sebelah. */
+function potongan(){
+  var list = tersedia(), sisa = [], total = 0, i;
+  for (i = 0; i < list.length; i++){ sisa.push(list[i].seg); total += list[i].seg; }
+  var hasil = [], terakhir = -1;
+  while (hasil.length < total){
+    var pilih = -1, terbanyak = -1;
+    for (i = 0; i < list.length; i++){
+      if (sisa[i] <= 0) continue;
+      if (i === terakhir && hasil.length < total - sisa[i]) continue;  // hindari berdempet
+      if (sisa[i] > terbanyak){ terbanyak = sisa[i]; pilih = i; }
+    }
+    if (pilih < 0){                       // terpaksa, tinggal satu jenis
+      for (i = 0; i < list.length; i++) if (sisa[i] > 0){ pilih = i; break; }
+    }
+    hasil.push(list[pilih]); sisa[pilih]--; terakhir = pilih;
+  }
+
+  /* Roda itu lingkaran, jadi potongan terakhir bersebelahan dengan yang
+     pertama. Rapikan sisa yang masih berdempet dengan menukar posisi. */
+  var n = hasil.length, putaran, j, k, tmp;
+  for (putaran = 0; putaran < 40; putaran++){
+    var adaDempet = false;
+    for (j = 0; j < n; j++){
+      if (hasil[j].i !== hasil[(j+1) % n].i) continue;
+      adaDempet = true;
+      for (k = 0; k < n; k++){
+        var a = hasil[(j+1) % n], b = hasil[k];
+        if (a.i === b.i) continue;
+        // Tukar hanya kalau kedua sisi jadi bersih
+        if (hasil[(k-1+n) % n].i === a.i || hasil[(k+1) % n].i === a.i) continue;
+        if (hasil[j].i === b.i || hasil[(j+2) % n].i === b.i) continue;
+        tmp = hasil[(j+1) % n]; hasil[(j+1) % n] = hasil[k]; hasil[k] = tmp;
+        break;
+      }
+    }
+    if (!adaDempet) break;
+  }
+  return hasil;
+}
+function pol(cx,cy,r,d){ var a=(d-90)*Math.PI/180; return [cx+r*Math.cos(a), cy+r*Math.sin(a)]; }
+function arc(cx,cy,r,a1,a2){
+  var s=pol(cx,cy,r,a1), e=pol(cx,cy,r,a2);
+  return 'M '+cx+' '+cy+' L '+s[0].toFixed(1)+' '+s[1].toFixed(1)+' A '+r+' '+r+' 0 '
+    +(a2-a1>180?1:0)+' 1 '+e[0].toFixed(1)+' '+e[1].toFixed(1)+' Z';
+}
+function gambar(node){
+  var seg = potongan();
+  if (!seg.length){
+    node.innerHTML = '<svg viewBox="0 0 420 420" width="100%" height="100%">'
+      + '<circle cx="210" cy="210" r="200" fill="#2A2438"/></svg>';
+    return;
+  }
+  var t = TEMA[C.tema] || TEMA.anniversale;
+  var R = 200, K = 210, n = seg.length, sw = 360/n, s, i, p, a, mid;
+
+  s = '<svg viewBox="0 0 420 420" width="100%" height="100%">'
+    + '<circle cx="210" cy="210" r="209" fill="' + t.ac2 + '"/>';
+
+  for (i = 0; i < n; i++){
+    p = warna(seg[i].i); a = i*sw; mid = a + sw/2;
+    // Pemisah krem, bukan warna latar. Potongan gelap yang bersebelahan
+    // akan menyatu jadi satu blok kalau pemisahnya ikut gelap.
+    s += '<path d="' + arc(K,K,R,a,a+sw) + '" fill="' + p + '" stroke="#EFE2C0" stroke-width="2.2"/>';
+
+    /* Dengan 15 potongan, tiap potongan cuma selebar ±50px di titik teks.
+       Teks mendatar hanya muat 5 huruf. Jadi teks ditulis memanjang dari
+       hub ke tepi — ruangnya jadi ±118px. Nama panjang dipecah dua baris
+       supaya hurufnya tidak mengecil sampai tak terbaca dari jauh. */
+    var baris = pecahNama(seg[i].n, 118);
+    var fs = baris.fs, isi = baris.teks, kiri = mid >= 180;
+    var dy0 = isi.length > 1 ? -fs*0.52 : 0;
+    var tx = '';
+    for (var b = 0; b < isi.length; b++){
+      tx += '<tspan x="' + (kiri ? -66 : 66) + '" dy="' + (b === 0 ? (dy0 + fs*0.35) : fs*1.05).toFixed(1)
+          + '">' + esc(isi[b]) + '</tspan>';
+    }
+    s += '<text transform="translate(210,210) rotate(' + (kiri ? (mid+90) : (mid-90)).toFixed(2) + ')" '
+      + 'text-anchor="' + (kiri ? 'end' : 'start') + '" '
+      + 'font-family="Roboto,Arial" font-size="' + fs + '" font-weight="900" font-style="italic" '
+      + 'fill="' + kontras(p) + '">' + tx + '</text>';
+  }
+  /* Bingkai emas berlampu seperti di KV tripod — lampunya di antara dua
+     potongan, jadi sekaligus menandai batas tiap potongan. */
+  if (t.emas){
+    s = s.replace('<circle cx="210" cy="210" r="209" fill="' + t.ac2 + '"/>',
+        '<circle cx="210" cy="210" r="209" fill="#5A3A16"/>'
+      + '<circle cx="210" cy="210" r="204" fill="none" stroke="#E0C182" stroke-width="11"/>');
+    for (i = 0; i < n; i++){
+      var b = pol(K,K,204,i*sw);
+      // Jeda animasi dibuat berurutan mengelilingi roda, jadi nyalanya
+      // berkejaran searah putaran — bukan berkedip serempak.
+      var jeda = (-(i / n) * 0.6).toFixed(3);
+      var bx = b[0].toFixed(1), by = b[1].toFixed(1);
+      // Tiga lapis: halo lembut, badan lampu kuning, lalu titik putih di
+      // tengah. Halo yang membuatnya terbaca "menyala", bukan sekadar bulat.
+      s += '<circle class="bulb halo" style="animation-delay:' + jeda + 's" cx="' + bx
+        +  '" cy="' + by + '" r="13" fill="#F6FF00" opacity=".28"/>'
+        +  '<circle class="bulb" style="animation-delay:' + jeda + 's" cx="' + bx
+        +  '" cy="' + by + '" r="8.6" fill="#F6FF00" stroke="#FFFDE0" stroke-width="1.6"/>'
+        +  '<circle class="bulb" style="animation-delay:' + jeda + 's" cx="' + bx
+        +  '" cy="' + by + '" r="3.6" fill="#FFFFFF"/>';
+    }
+  } else {
+    for (i = 0; i < n; i++){
+      var q = pol(K,K,R-7,i*sw);
+      s += '<circle cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="4" fill="#fff"/>';
+    }
+  }
+  node.innerHTML = s + '</svg>';
+}
+/* Mencari ukuran huruf terbesar yang masih muat. Nama panjang dipecah
+   jadi dua baris di spasi yang paling seimbang. */
+function pecahNama(nama, muat){
+  var satu = Math.min(17, Math.floor(muat / (nama.length * 0.56)));
+  if (satu >= 13) return { fs: satu, teks: [nama] };
+
+  var kata = nama.split(' ');
+  if (kata.length > 1){
+    var potong = 1, selisih = 1e9, i, a, b;
+    for (i = 1; i < kata.length; i++){
+      a = kata.slice(0,i).join(' ').length;
+      b = kata.slice(i).join(' ').length;
+      if (Math.abs(a-b) < selisih){ selisih = Math.abs(a-b); potong = i; }
+    }
+    var b1 = kata.slice(0,potong).join(' '), b2 = kata.slice(potong).join(' ');
+    var maks = Math.max(b1.length, b2.length);
+    var dua = Math.min(16, Math.floor(muat / (maks * 0.56)));
+    if (dua > satu) return { fs: Math.max(9, dua), teks: [b1, b2] };
+  }
+  if (satu >= 9) return { fs: satu, teks: [nama] };
+  return { fs: 9, teks: [nama.substring(0, 20) + '…'] };
+}
+
+/* Potongan gelap dapat teks putih, potongan emas dapat teks hitam.
+   Kebetulan hanya Rice Cooker yang berwarna terang, jadi perbedaan warna
+   teksnya justru menegaskan bahwa itu hadiah utama. */
+function kontras(hex){
+  var r=parseInt(hex.substr(1,2),16), g=parseInt(hex.substr(3,2),16), b=parseInt(hex.substr(5,2),16);
+  return (r*299 + g*587 + b*114)/1000 > 140 ? '#111' : '#fff';
+}
+
+/* Undian dilakukan atas POTONGAN, bukan stok. Jadi peluang yang dirasakan
+   konsumen persis sama dengan yang terlihat di roda — kalau Voucher 50k
+   menempati 4 dari 15 potongan, peluangnya memang 4/15. */
+function undi(seg){
+  if (!seg.length) return null;
+  return seg[Math.floor(Math.random() * seg.length)];
+}
+
+/* ── Alur layar ─────────────────────────────────────────── */
+var sibuk = false, rot = 0, kembaliT = null;
+/* Papan "hadiah yang sudah keluar" di layar diam.
+   Hanya menampilkan hadiah yang benar-benar sudah keluar, urut terbanyak. */
+function renderPapan(){
+  var hit = hitungRiwayat(), h = hadiah(), i, total = 0, urut = [];
+  for (i = 0; i < h.length; i++){
+    if (!h[i].n) continue;
+    var k = hit[h[i].n] || 0;
+    if (k > 0) urut.push({ n: h[i].n, k: k, w: warna(i) });
+    total += k;
+  }
+  urut.sort(function(a,b){ return b.k - a.k; });
+
+  var idle = el('idle');
+  if (!total){
+    idle.className = idle.className.replace(/\s*ada\b/, '');
+    el('papan').innerHTML = '';
+    return;
+  }
+  if (idle.className.indexOf('ada') < 0) idle.className += ' ada';
+
+  var baris = '';
+  for (i = 0; i < urut.length; i++){
+    baris += '<tr><td><span style="display:inline-block;width:14px;height:14px;border-radius:3px;'
+      + 'margin-right:14px;background:' + urut[i].w + '"></span>' + esc(urut[i].n) + '</td>'
+      + '<td class="r">' + urut[i].k + '</td></tr>';
+  }
+  el('papan').innerHTML = '<table><thead><tr><th>Hadiah yang sudah keluar</th>'
+    + '<th class="r">Jumlah</th></tr></thead><tbody>' + baris
+    + '<tr class="tot"><td>TOTAL</td><td class="r">' + total + '</td></tr></tbody></table>';
+}
+
+function adegan(id){
+  var a = ['idle','play'], i, tetap;
+  for (i = 0; i < a.length; i++){
+    // Kelas "ada" menandai papan hadiah sedang tampil — jangan ikut terhapus
+    tetap = (a[i] === 'idle' && el('idle').className.indexOf('ada') >= 0) ? ' ada' : '';
+    el(a[i]).className = 'scene' + (a[i]===id ? ' on' : '') + tetap;
+  }
+}
+function popTampil(zonk){ el('pop').className = 'on' + (zonk ? ' zonk' : ''); }
+function popTutup(){ el('pop').className = ''; }
+function popAda(){ return el('pop').className.indexOf('on') >= 0; }
+function keIdle(){ clearTimeout(kembaliT); popTutup(); adegan('idle'); renderPapan(); }
+
+function putar(){
+  if (sibuk) return;
+  if (!tersedia().length){ alert('Semua hadiah sudah habis. Buka Pengaturan untuk mengisi ulang.'); return; }
+
+  sibuk = true;
+  clearTimeout(kembaliT);
+  var seg = potongan();
+  var idx = Math.floor(Math.random() * seg.length);   // satu potongan, satu peluang
+  var menang = seg[idx];
+  var sw = 360/seg.length, mid = idx*sw + sw/2;
+
+  gambar(el('roda2'));
+  adegan('play');
+
+  var r = el('roda2');
+  r.className = 'rot';
+  r.style.transform = 'rotate(' + rot + 'deg)';
+  void r.offsetWidth;
+  var jit = (Math.random()-0.5) * sw * 0.7;
+  var base = ((rot % 360) + 360) % 360;
+  rot += 360*6 + (360-base) - mid - jit;
+  r.className = 'rot spin';
+  r.style.transform = 'rotate(' + rot + 'deg)';
+
+  setTimeout(function(){
+    if (C.kurang == 1) hadiah()[menang.i].q = Math.max(0, hadiah()[menang.i].q - 1);
+    // Riwayat dicatat terpisah dari stok, supaya tetap utuh meski stok diedit
+    var tsMenang = new Date().getTime();
+    C.riwayat.push({ n: menang.n, s: namaSet(), t: tsMenang });
+    if (C.riwayat.length > 2000) C.riwayat.splice(0, C.riwayat.length - 2000);
+    simpan();
+    catat(menang.n, tsMenang);
+    // Stok habis membuat potongan hadiah itu hilang, jadi roda digambar ulang
+    tampilHasil(menang.n);
+    sibuk = false;
+  }, 5700);
+}
+
+function tampilHasil(namaHadiah){
+  var zonk = /coba lagi|belum beruntung|zonk/i.test(namaHadiah);
+  el('rlb').textContent = zonk ? 'Belum beruntung kali ini' : 'Selamat, Anda mendapatkan';
+  el('rnm').textContent = namaHadiah;
+
+  // Roda tetap tampil di belakang popup, jadi jarum penunjuk masih terlihat
+  popTampil(zonk);
+  // Lampu terus berkejaran selama hasil ditampilkan — momen paling ramai
+  el('roda2').className = 'rot nyala';
+  el('roda2').style.transform = 'rotate(' + rot + 'deg)';
+  kembaliT = setTimeout(keIdle, 20000);
+}
+
+/* ── Kendali ────────────────────────────────────────────── */
+document.onclick = function(e){
+  if (el('adm').className.indexOf('on') >= 0) return;
+  if (e.target.id === 'gear') return;
+  if (popAda()){ keIdle(); return; }
+  putar();
+};
+/* Kode tombol berbeda-beda antar merek TV, jadi semuanya diterima:
+   13 Enter (dipakai tombol OK di Android TV, Tizen, dan webOS)
+   32 Spasi · 415/179/10252 tombol Play di sebagian remote
+   Tombol Kembali: 8 Backspace · 27 Esc · 461 webOS · 10009 Tizen · 4 Android */
+var OK    = [13, 32, 415, 179, 10252, 32768];
+var BACK  = [8, 27, 461, 10009, 4];
+var punya = function(a, k){ for (var i = 0; i < a.length; i++) if (a[i] === k) return true; return false; };
+
+var backHit = 0, backSaat = 0;
+document.onkeydown = function(e){
+  var k = e.keyCode;
+
+  if (el('adm').className.indexOf('on') >= 0){
+    if (punya(BACK, k)){ e.preventDefault(); tutupAdm(); }
+    return;
+  }
+
+  if (punya(OK, k)){
+    e.preventDefault();
+    if (popAda()) keIdle(); else putar();
+    return;
+  }
+
+  /* Jalan masuk pengaturan untuk remote yang tidak punya tombol huruf:
+     tekan Kembali lima kali dalam tiga detik. */
+  if (punya(BACK, k)){
+    e.preventDefault();
+    var now = new Date().getTime();
+    if (now - backSaat > 3000){ backSaat = now; backHit = 1; } else backHit++;
+    if (backHit >= 5){ backHit = 0; bukaAdm(); return; }
+    keIdle();
+    return;
+  }
+
+  if (k === 65 || k === 48) bukaAdm();       // huruf A atau angka 0
+};
+
+/* ── Panel admin ────────────────────────────────────────── */
+function bukaAdm(){
+  el('cBrand').value = C.brand; el('cToko').value = C.toko;
+  el('cJudul').value = C.judul; el('cSub').value = C.sub; el('cSub2').value = C.sub2 || '';
+  el('cKurang').value = C.kurang;
+  el('cSheet').value = C.sheet || '';
+  el('cForm').value = C.form || '';
+  infoForm();
+  renderTema(); renderTbl(); renderRiwayat();
+  el('bawaanInfo').innerHTML = bedaDariBawaan()
+    ? '<div class="note">Daftar hadiah di TV ini <b>berbeda</b> dari daftar bawaan file. '
+      + 'Itu normal kalau Anda pernah mengubahnya. Kalau ingin memakai daftar terbaru, '
+      + 'tekan tombol di atas.</div>'
+    : '';
+  el('adm').className = 'on';
+}
+function tutupAdm(){ el('adm').className = ''; terapkan(); }
+el('gear').onclick = function(e){ e.stopPropagation(); bukaAdm(); };
+el('bTutup').onclick = tutupAdm;
+
+/* ── Riwayat hadiah keluar ─────────────────────────────── */
+function hitungRiwayat(){
+  var out = {}, i, r;
+  for (i = 0; i < C.riwayat.length; i++){
+    r = C.riwayat[i];
+    if (r.s !== namaSet()) continue;      // hanya set yang sedang dipakai
+    out[r.n] = (out[r.n] || 0) + 1;
+  }
+  return out;
+}
+function renderRiwayat(){
+  var hit = hitungRiwayat(), h = hadiah(), i, total = 0, baris = '';
+  for (i = 0; i < h.length; i++){
+    if (!h[i].n) continue;
+    var k = hit[h[i].n] || 0;
+    total += k;
+    baris += '<tr><td><span class="sw" style="background:' + warna(i) + '"></span>' + esc(h[i].n) + '</td>'
+      + '<td class="q" style="color:var(--ac1);font-weight:700">' + k + '</td>'
+      + '<td class="q">' + (+h[i].q || 0) + '</td></tr>';
+    delete hit[h[i].n];
+  }
+  // Hadiah yang sudah dihapus dari daftar tapi pernah keluar tetap ditampilkan
+  for (var n in hit){
+    total += hit[n];
+    baris += '<tr><td style="color:#8E86A3">' + esc(n) + ' <i>(tidak di daftar)</i></td>'
+      + '<td class="q" style="color:var(--ac1);font-weight:700">' + hit[n] + '</td><td class="q">—</td></tr>';
+  }
+  el('riwayatBox').innerHTML = total === 0
+    ? '<div class="note">Belum ada hadiah yang keluar di set <b>' + esc(namaSet()) + '</b>.</div>'
+    : '<table id="tbl"><thead><tr><th>Hadiah</th><th style="text-align:right">Sudah keluar</th>'
+      + '<th style="text-align:right">Sisa stok</th></tr></thead><tbody>' + baris
+      + '</tbody><tfoot><tr><td style="font-weight:700">TOTAL</td>'
+      + '<td class="q" style="font-weight:700">' + total + '</td><td></td></tr></tfoot></table>';
+}
+el('bRwHapus').onclick = function(){
+  if (!confirm('Kosongkan riwayat untuk set ' + namaSet() + '?\n\nStok tidak ikut berubah.')) return;
+  var sisa = [], i;
+  for (i = 0; i < C.riwayat.length; i++) if (C.riwayat[i].s !== namaSet()) sisa.push(C.riwayat[i]);
+  C.riwayat = sisa; simpan(); renderRiwayat();
+};
+el('bRwCsv').onclick = function(){
+  var b = 'Waktu,Set,Hadiah\n', i, r, d;
+  for (i = 0; i < C.riwayat.length; i++){
+    r = C.riwayat[i]; d = new Date(r.t);
+    b += '"' + d.toLocaleString('id-ID') + '","' + r.s + '","' + String(r.n).replace(/"/g,'""') + '"\n';
+  }
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,%EF%BB%BF' + encodeURIComponent(b);
+  a.download = 'riwayat-hadiah.csv'; a.click();
+};
+
+function renderTema(){
+  var h = '', k;
+  for (k in TEMA){
+    var t = TEMA[k];
+    h += '<div class="tema' + (k===C.tema?' on':'') + '" data-t="' + k + '" style="background:'
+      + t.bg1 + ';box-shadow:inset 0 0 0 3px ' + t.ac1 + ',inset 0 -14px 0 ' + t.ac2 + '"></div>';
+  }
+  el('temaBox').innerHTML = h;
+}
+el('temaBox').onclick = function(e){
+  var t = e.target.getAttribute('data-t'); if (!t) return;
+  C.tema = t; simpan(); renderTema(); renderTbl(); terapkan();
+};
+
+function renderTbl(){
+  var totSeg = 0, totQ = 0, i;
+  for (i = 0; i < hadiah().length; i++){
+    var y = hadiah()[i];
+    if (!y.n) continue;
+    totQ += (+y.q || 0);
+    if ((+y.q||0) > 0) totSeg += (+y.seg || 0);   // stok habis = tidak ikut di roda
+  }
+  var h = '';
+  for (i = 0; i < hadiah().length; i++){
+    var x = hadiah()[i];
+    var ikut = (+x.q||0) > 0;
+    var p = (totSeg && ikut) ? (+x.seg||0)/totSeg*100 : 0;
+    h += '<tr><td><span class="sw" style="background:' + warna(i) + '"></span>'
+      + '<input value="' + esc(x.n) + '" data-f="n" data-i="' + i + '" placeholder="Nama hadiah" '
+      + 'style="width:calc(100% - 34px)"></td>'
+      + '<td><input class="q" type="number" min="0" value="' + (+x.seg||0) + '" data-f="seg" data-i="' + i + '"></td>'
+      + '<td><input class="q" type="number" min="0" value="' + (+x.q||0) + '" data-f="q" data-i="' + i + '"></td>'
+      + '<td class="p">' + (ikut ? ((p>0 && p<0.1) ? '&lt;0,1' : p.toFixed(1).replace('.',',')) + '%' : 'habis') + '</td>'
+      + '<td><span class="x" data-del="' + i + '">&times;</span></td></tr>';
+  }
+  el('tbody').innerHTML = h;
+  el('tot').textContent = totSeg;
+  el('totq').textContent = totQ;
+}
+el('tbody').oninput = function(e){
+  var i = e.target.getAttribute('data-i'), f = e.target.getAttribute('data-f');
+  if (i === null) return;
+  hadiah()[+i][f] = (f === 'q' || f === 'seg') ? Math.max(0, +e.target.value||0) : e.target.value;
+  simpan(); renderTbl2();
+  el('hint').style.display = masihContoh() ? 'block' : 'none';
+};
+/* Hanya angka peluang & total yang disegarkan, supaya kursor tidak melompat */
+function renderTbl2(){
+  var totSeg = 0, totQ = 0, i;
+  for (i = 0; i < hadiah().length; i++){
+    if (!hadiah()[i].n) continue;
+    totQ += (+hadiah()[i].q||0);
+    if ((+hadiah()[i].q||0) > 0) totSeg += (+hadiah()[i].seg||0);
+  }
+  var sel = el('tbody').getElementsByClassName('p');
+  for (i = 0; i < sel.length; i++){
+    var ikut = (+hadiah()[i].q||0) > 0;
+    var p = (totSeg && ikut) ? (+hadiah()[i].seg||0)/totSeg*100 : 0;
+    sel[i].innerHTML = ikut ? (((p>0 && p<0.1) ? '&lt;0,1' : p.toFixed(1).replace('.',',')) + '%') : 'habis';
+  }
+  el('tot').textContent = totSeg;
+  el('totq').textContent = totQ;
+}
+el('tbody').onclick = function(e){
+  var d = e.target.getAttribute('data-del'); if (d === null) return;
+  hadiah().splice(+d,1); simpan(); renderTbl();
+};
+el('bAdd').onclick = function(){ hadiah().push({n:'', seg:1, q:1}); simpan(); renderTbl(); };
+
+/* Pengaturan tersimpan di browser selalu menang atas daftar bawaan —
+   itu memang disengaja, supaya isian Anda tidak hilang saat file diperbarui.
+   Tombol ini jalan keluarnya kalau Anda memang ingin memakai daftar terbaru. */
+el('bBawaan').onclick = function(){
+  var nama = [];
+  var bw = bawaanSet();
+  for (var i = 0; i < bw.length; i++) nama.push(bw[i].n);
+  if (!confirm('Ganti daftar hadiah sekarang dengan daftar bawaan?\n\n'
+      + nama.join('\n') + '\n\nPengaturan lain (logo, judul, link Form) tidak berubah.')) return;
+  C.daftar[C.set].hadiah = JSON.parse(JSON.stringify(bawaanSet()));
+  simpan(); renderTbl(); terapkan();
+  el('bawaanInfo').innerHTML = '<div class="note">Daftar hadiah diganti dengan '
+    + hadiah().length + ' hadiah bawaan.</div>';
+};
+
+['cBrand','cToko','cJudul','cSub','cSub2','cSheet','cForm'].forEach(function(id){
+  el(id).oninput = function(){
+    C.brand = el('cBrand').value; C.toko = el('cToko').value;
+    C.judul = el('cJudul').value; C.sub = el('cSub').value;
+    C.sub2 = el('cSub2').value;
+    C.sheet = el('cSheet').value.replace(/^\s+|\s+$/g,'');
+    C.form = el('cForm').value.replace(/^\s+|\s+$/g,'');
+    simpan();
+  };
+});
+el('cSheet').onchange = function(){ if (C.sheet) muatSheet(false); };
+el('bKirimUlang').onclick = function(){
+  if (!C.antre.length){ alert('Tidak ada catatan yang tertunda.'); return; }
+  var n = C.antre.length; kirimAntrian();
+  alert('Mencoba mengirim ' + n + ' catatan. Sisa tertunda: ' + C.antre.length);
+};
+el('cKurang').onchange = function(){ C.kurang = +this.value; simpan(); };
+el('cLogo').onchange = function(){
+  var f = this.files[0]; if (!f) return;
+  var rd = new FileReader();
+  rd.onload = function(){ C.logo = rd.result; simpan(); terapkan(); };
+  rd.readAsDataURL(f);
+};
+
+el('bExp').onclick = function(){
+  var a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(C,null,1));
+  a.download = 'pengaturan-spin.json'; a.click();
+};
+el('bImpBtn').onclick = function(){ el('bImp').click(); };
+el('bImp').onchange = function(){
+  var f = this.files[0]; if (!f) return;
+  var rd = new FileReader();
+  rd.onload = function(){
+    try { C = JSON.parse(rd.result); simpan(); bukaAdm(); terapkan(); }
+    catch(e){ alert('File tidak terbaca.'); }
+  };
+  rd.readAsText(f); this.value = '';
+};
+el('bReset').onclick = function(){
+  if (!confirm('Kembalikan semua pengaturan ke contoh awal?')) return;
+  C = JSON.parse(JSON.stringify(CONTOH)); simpan(); bukaAdm(); terapkan();
+};
+
+/* ── Pencatatan otomatis ke Google Form ──────────────────
+   Dikirim lewat Image(), bukan XHR. Google memblokir pembacaan balasan
+   lintas domain, tapi permintaannya tetap sampai — dan Image() bekerja
+   di browser TV lama yang belum mengenal fetch(). */
+function urlForm(namaHadiah, waktuMs){
+  if (!C.form) return '';
+  var d = new Date(waktuMs), pad = function(n){ return (n<10?'0':'') + n; };
+  var w = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate())
+        + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+  var u = C.form.replace('/viewform', '/formResponse')
+    .replace(/[?&]usp=[^&]*/g, '')
+    .replace(/HADIAH/g, encodeURIComponent(namaHadiah))
+    .replace(/TOKO/g,   encodeURIComponent(C.toko || namaSet()))
+    .replace(/WAKTU/g,  encodeURIComponent(w));
+  // Membuang usp=pp_url bisa ikut menghapus tanda '?', menyisakan
+  // /formResponse&entry... yang ditolak Google. Kembalikan pemisahnya.
+  if (u.indexOf('?') < 0) u = u.replace('&', '?');
+  return u + '&submit=Submit';
+}
+function kirimSatu(item){
+  var u = urlForm(item.n, item.t);
+  if (!u) return false;
+  try { var img = new Image(); img.src = u; return true; } catch(e){ return false; }
+}
+function offline(){ return typeof navigator !== 'undefined' && navigator.onLine === false; }
+function catat(namaHadiah, waktuMs){
+  if (!C.form) return;
+  if (offline() || !kirimSatu({ n: namaHadiah, t: waktuMs })) C.antre.push({ n: namaHadiah, t: waktuMs });
+  else C.terkirim = (C.terkirim || 0) + 1;
+  simpan(); infoForm();
+}
+function kirimAntrian(){
+  if (!C.form || !C.antre.length || offline()) return;
+  var sisa = [], i;
+  for (i = 0; i < C.antre.length; i++){
+    if (kirimSatu(C.antre[i])) C.terkirim = (C.terkirim || 0) + 1;
+    else sisa.push(C.antre[i]);
+  }
+  C.antre = sisa; simpan(); infoForm();
+}
+function infoForm(){
+  var n = el('formInfo');
+  if (!n) return;
+  n.innerHTML = !C.form ? '' :
+    '<div class="note">Terkirim <b>' + (C.terkirim || 0) + '</b> putaran'
+    + (C.antre.length ? ' &middot; <b style="color:#FFC24B">' + C.antre.length + ' menunggu kirim</b>' : '')
+    + (offline() ? ' &middot; sedang offline' : '') + '</div>';
+}
+
+/* ── Daftar hadiah dari Google Sheet ─────────────────────
+   Memakai XMLHttpRequest, bukan fetch(), karena browser bawaan sebagian
+   Smart TV belum mengenal fetch. Sheet yang di-Publish to web sudah
+   mengizinkan akses lintas domain, jadi tidak perlu server perantara. */
+function belahCSV(baris){
+  var out = [], cur = '', q = false, i, c;
+  for (i = 0; i < baris.length; i++){
+    c = baris.charAt(i);
+    if (c === '"'){ if (q && baris.charAt(i+1) === '"'){ cur += '"'; i++; } else q = !q; }
+    else if (c === ',' && !q){ out.push(cur); cur = ''; }
+    else cur += c;
+  }
+  out.push(cur);
+  // Kalau tanda kutipnya tidak seimbang, seluruh baris jadi satu kolom dan
+  // hadiahnya hilang tanpa pesan. Lebih baik mundur ke pemisahan koma biasa.
+  if (q && baris.indexOf(',') >= 0){
+    out = baris.replace(/"/g, '').split(',');
+  }
+  return out;
+}
+function muatSheet(diam){
+  if (!C.sheet) { pesanSheet(''); return; }
+  var x = new XMLHttpRequest();
+  x.open('GET', C.sheet + (C.sheet.indexOf('?') < 0 ? '?' : '&') + 't=' + new Date().getTime(), true);
+  x.onreadystatechange = function(){
+    if (x.readyState !== 4) return;
+    if (x.status !== 200){ pesanSheet('gagal: HTTP ' + x.status); return; }
+    var baris = x.responseText.replace(/\r/g,'').split('\n');
+    var hasil = [], i, k, nm, jm;
+    for (i = 0; i < baris.length; i++){
+      if (!baris[i].replace(/[,\s]/g,'')) continue;
+      k = belahCSV(baris[i]);
+      // Jangan mengupas tanda kutip di sini — belahCSV sudah menanganinya,
+      // dan nama seperti Smart TV 43" memang berakhir dengan tanda inci.
+      nm = (k[0] || '').replace(/^\s+|\s+$/g,'');
+      jm = parseInt(String(k[1] || '').replace(/[^0-9-]/g,''), 10);
+      var st = parseInt(String(k[2] || '').replace(/[^0-9-]/g,''), 10);
+      if (!nm) continue;
+      // Lewati baris judul: kolom B bukan angka
+      if (isNaN(jm)) continue;
+      // Kolom C boleh dikosongkan — berarti stok sama dengan jumlah tampil
+      if (isNaN(st)) st = jm;
+      hasil.push({ n: nm, seg: Math.max(0, jm), q: Math.max(0, st) });
+    }
+    if (!hasil.length){ pesanSheet('terbaca, tapi tidak ada baris hadiah yang sah'); return; }
+    C.daftar[C.set].hadiah = hasil;
+    simpan();
+    pesanSheet('berhasil: ' + hasil.length + ' hadiah, ' + jam() + '');
+    if (!sibuk){ gambar(el('roda1')); gambar(el('roda2')); }
+    if (el('adm').className.indexOf('on') >= 0) renderTbl();
+    if (!diam) alert('Daftar hadiah diperbarui dari Sheet: ' + hasil.length + ' hadiah.');
+  };
+  try { x.send(); } catch(e){ pesanSheet('gagal: ' + e.message); }
+}
+function jam(){
+  var d = new Date(), p = function(n){ return (n<10?'0':'') + n; };
+  return p(d.getHours()) + ':' + p(d.getMinutes());
+}
+function pesanSheet(t){
+  var n = el('sheetInfo');
+  if (n) n.innerHTML = t ? '<div class="note">Sheet — ' + t + '</div>' : '';
+}
+
+terapkan();
+muatSheet(true);
+setInterval(function(){ if (!sibuk) muatSheet(true); }, 300000);
+
+kirimAntrian();
+setInterval(kirimAntrian, 60000);
+if (window.addEventListener) window.addEventListener('online', kirimAntrian, false);
+
+/* Sebagian browser TV baru mengirim event tombol setelah halaman difokus.
+   Tanpa ini, tombol OK terasa "tidak berfungsi" padahal remote normal. */
+function rebutFokus(){ try { document.body.focus(); } catch(e){} }
+rebutFokus();
+window.onload = rebutFokus;
+window.onfocus = rebutFokus;
+document.addEventListener('click', rebutFokus, true);
+setTimeout(rebutFokus, 800);
+
+if (!adaSimpan) setTimeout(function(){
+  alert('Browser TV ini tidak mengizinkan penyimpanan.\n\nPengaturan tetap bisa diubah, '
+      + 'tapi akan hilang saat halaman dimuat ulang. Pakai "Simpan ke file" untuk mencadangkan.');
+}, 1200);
+</script>
+</body>
+</html>
