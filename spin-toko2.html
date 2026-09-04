@@ -192,6 +192,8 @@ body{font-family:Roboto,Arial,Helvetica,sans-serif;color:#fff;
 </head>
 <body tabindex="0">
 
+<audio id="lagu" loop preload="auto" src="backsong.mp3"></audio>
+
 <div id="stage">
   <div id="bg"></div><div id="vig"></div>
   <div id="logo"></div><img id="logoImg" alt="">
@@ -283,6 +285,26 @@ body{font-family:Roboto,Arial,Helvetica,sans-serif;color:#fff;
     Kolom A nama hadiah, kolom B jumlah tampil di roda, kolom C stok asli
     (kolom C boleh dikosongkan — berarti sama dengan kolom B).</div>
 
+  <h3>Tampilan layar</h3>
+  <div class="two">
+    <label><span>Layar penuh otomatis?</span>
+      <select id="cPenuh"><option value="1">Ya</option><option value="0">Tidak</option></select></label>
+    <label><span>&nbsp;</span><button class="btn" id="bPenuh">Masuk layar penuh sekarang</button></label>
+  </div>
+  <div class="note">Browser hanya mengizinkan layar penuh setelah ada tombol ditekan, jadi ini
+    aktif saat <b>tombol OK pertama</b>. Untuk keluar, tekan tombol Keluar di remote atau Esc.</div>
+
+  <h3>Musik latar</h3>
+  <div class="two">
+    <label><span>Putar musik?</span>
+      <select id="cMusik"><option value="1">Ya</option><option value="0">Tidak</option></select></label>
+    <label><span>Volume (0&ndash;100)</span><input id="cVol" type="number" min="0" max="100" step="5"></label>
+  </div>
+  <div id="musikInfo"></div>
+  <div class="note">Browser TV melarang musik menyala sendiri sebelum ada yang menekan tombol.
+    Jadi musik baru mulai saat <b>tombol OK pertama ditekan</b>, lalu berputar terus.
+    Ini aturan browser, bukan sesuatu yang bisa saya lewati.</div>
+
   <h3>Pencatatan otomatis ke Google Form</h3>
   <label><span>Link isi-otomatis Google Form (kosongkan kalau tidak dipakai)</span>
     <textarea id="cForm" placeholder="tempel link pre-filled di sini"></textarea></label>
@@ -351,7 +373,7 @@ var CONTOH = {
   judul:'Pasti Untung',
   sub:'Beli Produk [POLYTRON] Sekarang<br>&amp; Putar Roda Keberuntunganmu!',
   sub2:'Total Hadiah Jutaan Rupiah',
-  logo:'data:image/png;base64,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', form:'', sheet:'', kurang:1, terkirim:0,
+  logo:'data:image/png;base64,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', form:'', sheet:'', kurang:1, terkirim:0, musik:1, vol:45, penuh:1,
   /* seg = berapa potongan yang tampil di roda (menentukan peluang)
      q   = stok sebenarnya. Keduanya sengaja dipisah karena hadiah langka
            tetap perlu 1 potongan agar terlihat, meski stoknya sedikit. */
@@ -420,6 +442,9 @@ function bedaDariBawaan(){
   }
   if (!C.riwayat) C.riwayat = [];
   if (!C.antre) C.antre = [];
+  if (C.musik === undefined) C.musik = 1;
+  if (C.penuh === undefined) C.penuh = 1;
+  if (C.vol === undefined) C.vol = 45;
   if (!C.terkirim) C.terkirim = 0;
   if (typeof C.set !== 'number' || C.set < 0 || C.set >= C.daftar.length) C.set = 0;
 
@@ -755,6 +780,7 @@ function tampilHasil(namaHadiah){
 document.onclick = function(e){
   if (el('adm').className.indexOf('on') >= 0) return;
   if (e.target.id === 'gear') return;
+  mulaiMusik(); mintaLayarPenuh();
   if (popAda()){ keIdle(); return; }
   putar();
 };
@@ -777,6 +803,7 @@ document.onkeydown = function(e){
 
   if (punya(OK, k)){
     e.preventDefault();
+    mulaiMusik(); mintaLayarPenuh();
     if (popAda()) keIdle(); else putar();
     return;
   }
@@ -802,7 +829,10 @@ function bukaAdm(){
   el('cKurang').value = C.kurang;
   el('cSheet').value = C.sheet || '';
   el('cForm').value = C.form || '';
-  infoForm();
+  el('cMusik').value = C.musik;
+  el('cPenuh').value = C.penuh;
+  el('cVol').value = C.vol;
+  infoForm(); infoMusik();
   renderTema(); renderTbl(); renderRiwayat();
   el('bawaanInfo').innerHTML = bedaDariBawaan()
     ? '<div class="note">Daftar hadiah di TV ini <b>berbeda</b> dari daftar bawaan file. '
@@ -967,6 +997,22 @@ el('bKirimUlang').onclick = function(){
   alert('Mencoba mengirim ' + n + ' catatan. Sisa tertunda: ' + C.antre.length);
 };
 el('cKurang').onchange = function(){ C.kurang = +this.value; simpan(); };
+el('cPenuh').onchange = function(){
+  C.penuh = +this.value; simpan();
+  if (C.penuh == 0) keluarLayarPenuh();
+};
+el('bPenuh').onclick = function(){
+  var simpananPenuh = C.penuh; C.penuh = 1;
+  mintaLayarPenuh();
+  C.penuh = simpananPenuh;
+};
+el('cMusik').onchange = function(){
+  C.musik = +this.value; simpan();
+  if (C.musik == 0) stopMusik(); else mulaiMusik();
+};
+el('cVol').oninput = function(){
+  C.vol = Math.max(0, Math.min(100, +this.value || 0)); simpan(); aturVolume();
+};
 el('cLogo').onchange = function(){
   var f = this.files[0]; if (!f) return;
   var rd = new FileReader();
@@ -993,6 +1039,79 @@ el('bReset').onclick = function(){
   if (!confirm('Kembalikan semua pengaturan ke contoh awal?')) return;
   C = JSON.parse(JSON.stringify(CONTOH)); simpan(); bukaAdm(); terapkan();
 };
+
+/* ── Layar penuh ─────────────────────────────────────────
+   Browser hanya mengizinkan layar penuh sebagai respons atas tindakan
+   pengguna, jadi ini dipanggil bersamaan dengan pemutaran musik: sama-sama
+   pada penekanan tombol pertama. Awalan vendor disertakan karena browser
+   Tizen dan webOS sebagian masih memakai versi berawalan webkit. */
+var pernahPenuh = false;
+
+function sedangPenuh(){
+  return !!(document.fullscreenElement || document.webkitFullscreenElement
+         || document.mozFullScreenElement || document.msFullscreenElement);
+}
+function mintaLayarPenuh(){
+  if (C.penuh == 0 || sedangPenuh()) return;
+  var n = document.documentElement;
+  var f = n.requestFullscreen || n.webkitRequestFullscreen
+       || n.mozRequestFullScreen || n.msRequestFullscreen;
+  if (!f) return;
+  try { f.call(n); pernahPenuh = true; } catch(e){}
+  setTimeout(skala, 300);
+}
+function keluarLayarPenuh(){
+  if (!sedangPenuh()) return;
+  var f = document.exitFullscreen || document.webkitExitFullscreen
+       || document.mozCancelFullScreen || document.msExitFullscreen;
+  if (!f) return;
+  try { f.call(document); } catch(e){}
+  setTimeout(skala, 300);
+}
+['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange']
+  .forEach(function(ev){
+    if (document.addEventListener) document.addEventListener(ev, function(){ setTimeout(skala, 60); }, false);
+  });
+
+/* ── Musik latar ─────────────────────────────────────────
+   Browser memblokir pemutaran otomatis sampai ada interaksi pengguna.
+   Karena itu musik dinyalakan pada penekanan tombol pertama, bukan saat
+   halaman dimuat — kalau dipaksa lebih awal, browser menolak diam-diam. */
+var lagu = null, musikJalan = false;
+
+function siapkanMusik(){
+  lagu = el('lagu');
+  if (!lagu) return;
+  lagu.volume = Math.max(0, Math.min(1, (C.vol === undefined ? 45 : C.vol) / 100));
+  lagu.loop = true;
+}
+function mulaiMusik(){
+  if (!lagu || musikJalan || C.musik == 0) return;
+  var janji = lagu.play();
+  if (janji && janji.then) {
+    janji.then(function(){ musikJalan = true; infoMusik(); })
+         .catch(function(){ musikJalan = false; infoMusik(); });
+  } else {
+    musikJalan = true; infoMusik();
+  }
+}
+function stopMusik(){
+  if (!lagu) return;
+  try { lagu.pause(); lagu.currentTime = 0; } catch(e){}
+  musikJalan = false; infoMusik();
+}
+function aturVolume(){
+  if (!lagu) return;
+  lagu.volume = Math.max(0, Math.min(1, (C.vol === undefined ? 45 : C.vol) / 100));
+}
+function infoMusik(){
+  var n = el('musikInfo');
+  if (!n) return;
+  n.innerHTML = C.musik == 0
+    ? '<div class="note">Musik dimatikan.</div>'
+    : '<div class="note">Status: <b>' + (musikJalan ? 'sedang berputar' : 'menunggu tombol pertama ditekan')
+      + '</b></div>';
+}
 
 /* ── Pencatatan otomatis ke Google Form ──────────────────
    Dikirim lewat Image(), bukan XHR. Google memblokir pembacaan balasan
@@ -1107,6 +1226,7 @@ function pesanSheet(t){
 }
 
 terapkan();
+siapkanMusik();
 muatSheet(true);
 setInterval(function(){ if (!sibuk) muatSheet(true); }, 300000);
 
